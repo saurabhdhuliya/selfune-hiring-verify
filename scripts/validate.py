@@ -61,8 +61,9 @@ blob = " ".join(open(p, encoding="utf-8").read().lower() for p in glob.glob("dat
 ok(all(w not in blob for w in ["planted", "expected_verdict", "\"block\":"]), "no answer words inside data/")
 p = sum(l["planted"] for l in labels)
 nc = sum(l["expected_verdict"] == "NOT_CHECKED" for l in labels)
-ok(35 <= p <= 45, f"planted count about 40 ({p})")
-ok(35 <= len(labels) - p - nc <= 45, f"clean count about 40 ({len(labels) - p - nc})")
+# v2: every (requirement, check) pair for C01-C03 labelled (docs/test_set.md has the per-check counts).
+ok(p == 47, f"planted count is 47 ({p})")
+ok(len(labels) - p - nc == 65, f"clean count is 65 ({len(labels) - p - nc})")
 ok(nc >= 2, f"NOT_CHECKED cases present ({nc})")
 checks = {l["check"] for l in labels if l["planted"]}
 ok(checks == {f"C{i:02d}" for i in range(1, 16)}, f"every check C01-C15 has a planted case (missing: {sorted({f'C{i:02d}' for i in range(1, 16)} - checks)})")

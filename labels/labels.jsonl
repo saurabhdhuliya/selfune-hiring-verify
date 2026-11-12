@@ -84,3 +84,32 @@
 {"label_id": "L084", "object_ref": "ai_text:AT09", "check": "C09", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0008"], "note": "ERD-style emotion/personality inference about a candidate: block."}
 {"label_id": "L085", "object_ref": "ai_text:AT10", "check": "C09", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0008"], "note": "ERD-style emotion/personality inference about a candidate: block."}
 {"label_id": "L086", "object_ref": "ai_text:AT11", "check": "C09", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0008"], "note": "ERD-style emotion/personality inference about a candidate: block."}
+{"label_id": "L087", "object_ref": "requirement:J1-R3", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; a years count (C02's concern)."}
+{"label_id": "L088", "object_ref": "requirement:J1-R5", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; measurable (60 wpm)."}
+{"label_id": "L089", "object_ref": "requirement:J2-R3", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; a years count (C02's concern)."}
+{"label_id": "L090", "object_ref": "requirement:J2-R4", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; an experience type."}
+{"label_id": "L091", "object_ref": "requirement:J3-R3", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; a years count (C02's concern)."}
+{"label_id": "L092", "object_ref": "requirement:J3-R4", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; a named certification (MO-201) is a test."}
+{"label_id": "L093", "object_ref": "requirement:J3-R5", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; a degree proxy, not an undefined trait."}
+{"label_id": "L094", "object_ref": "requirement:J3-R6", "check": "C01", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019", "GT-0021"], "note": "No vague trait word; tested in the work sample."}
+{"label_id": "L095", "object_ref": "requirement:J1-R1", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L096", "object_ref": "requirement:J1-R2", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count ('24 hours' is a time limit)."}
+{"label_id": "L097", "object_ref": "requirement:J1-R4", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L098", "object_ref": "requirement:J1-R5", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L099", "object_ref": "requirement:J2-R1", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L100", "object_ref": "requirement:J2-R2", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L101", "object_ref": "requirement:J2-R5", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L102", "object_ref": "requirement:J3-R1", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L103", "object_ref": "requirement:J3-R2", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count ('2-hour exercise' is a time limit)."}
+{"label_id": "L104", "object_ref": "requirement:J3-R4", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count."}
+{"label_id": "L105", "object_ref": "requirement:J3-R5", "check": "C02", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0019"], "note": "No years count (degree proxy, not years)."}
+{"label_id": "L106", "object_ref": "requirement:J1-R3", "check": "C03", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0020"], "note": "Years count with no reason stated."}
+{"label_id": "L107", "object_ref": "requirement:J1-R4", "check": "C03", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0020"], "note": "No reason stated."}
+{"label_id": "L108", "object_ref": "requirement:J2-R3", "check": "C03", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0020"], "note": "Go years with no reason stated (the backend is Python)."}
+{"label_id": "L109", "object_ref": "requirement:J2-R5", "check": "C03", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0020"], "note": "No reason stated."}
+{"label_id": "L110", "object_ref": "requirement:J3-R1", "check": "C03", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0020"], "note": "No reason stated."}
+{"label_id": "L111", "object_ref": "requirement:J3-R3", "check": "C03", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0020"], "note": "Years count with no reason stated."}
+{"label_id": "L112", "object_ref": "requirement:J1-R1", "check": "C03", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0020"], "note": "Reason stated: agents resolve escalated complaints."}
+{"label_id": "L113", "object_ref": "requirement:J2-R1", "check": "C03", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0020"], "note": "Reason stated: the billing backend is Python."}
+{"label_id": "L114", "object_ref": "requirement:J2-R2", "check": "C03", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0020"], "note": "Reason stated: the team owns uptime."}
+{"label_id": "L115", "object_ref": "requirement:J3-R6", "check": "C03", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0020"], "note": "Reason stated: reports pull from SQL."}

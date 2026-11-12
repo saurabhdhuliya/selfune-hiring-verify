@@ -10,7 +10,7 @@ role need  ->  requirement  ->  evidence  ->  decision
 
 Every link gets its own verdict. The chain is only as strong as its weakest link.
 
-**Status: data layer done, checks not built.** The checks in `src/checks/` come next. Nothing ships until the loop test in `labels/` passes.
+**Status: all 15 checks built** in `src/selfune_hv/checks/`; C01, C02, C03, C06 and C15 are rule baselines. `scripts/score.py` passes the loop test in `labels/` on synthetic data. Not built yet: wiring check results into decision chains, and any measurement on real data.
 
 ## Hard rules
 1. **No emotion or personality inference** about candidates. The loop detects and blocks tools that do it (EU AI Act, ledger GT-0008).
@@ -34,7 +34,7 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 | `examples/decision_chains.json` | Three worked chains: one VERIFIED, one UNVERIFIED and one blocked (ESCALATE). |
 
 ## Test set (section 9)
-- 86 scored items: 41 planted, 42 clean, 3 NOT_CHECKED.
+- 115 scored items: 47 planted, 65 clean, 3 NOT_CHECKED. Every (requirement, check) pair for C01-C03 is labelled.
 - Every check from C01 to C15 has at least one planted case.
 - Release rule: every code check catches 100% of its planted cases, and false alarms stay under 10%.
 - Rule baselines are tuned on synthetic data; real-world accuracy is unmeasured.

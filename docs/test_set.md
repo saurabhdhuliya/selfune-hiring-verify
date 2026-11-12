@@ -16,9 +16,9 @@ Each row of `labels/labels.jsonl` is one (object, check) pair:
 
 | Check | Planted | Clean | NOT_CHECKED |
 |---|---|---|---|
-| C01 undefined trait | 5 | 5 | |
-| C02 years as proxy | 3 | 2 | |
-| C03 no stated reason | 3 | 3 | |
+| C01 undefined trait | 5 | 13 | |
+| C02 years as proxy | 3 | 13 | |
+| C03 no stated reason | 9 | 7 | |
 | C04 weak method | 2 | 1 | |
 | C05 4/5 rule | 2 | 2 | 1 |
 | C06 missing field as negative | 4 | 4 | |
@@ -31,10 +31,11 @@ Each row of `labels/labels.jsonl` is one (object, check) pair:
 | C13 timing (warn only) | 1 | 1 | |
 | C14 India DPDP | 2 | 2 | |
 | C15 vendor claim as proof | 3 | 2 | |
+| **Total (115)** | **47** | **65** | **3** |
 
 C09's clean column includes one `UNVERIFIED` case (T11 `infers_emotion: unknown`). The expected behaviour there is to ask the employer, neither pass nor block.
 
 ## Known limits
-- Only targeted pairs are labelled. Checks that fire on unlabelled pairs (for example C03 on J1-R3) aren't counted as false alarms yet. v2 should label every (object, check) pair.
+- Every (requirement, check) pair for C01-C03 is labelled (L087-L115, added after v1 so earlier IDs are unchanged). They were decided from the requirement text using each check's stated rule, so they measure whether a check follows its rule, not whether the rule is right. Other checks still label only targeted pairs; firings on unlabelled pairs aren't counted as false alarms.
 - Planted decisions sit at the first positions of each job. That doesn't matter while the loop never reads labels, but shuffle them before any learned component is trained on this set.
 - Names in the C07 probes are placeholders (NAME_SET_A and NAME_SET_B). A real name-swap run needs a name list from published audit studies, kept outside the repo.

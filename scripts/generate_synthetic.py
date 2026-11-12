@@ -510,11 +510,64 @@ def erd_ai_text(erd_path: str | None) -> None:
         label(f"ai_text:{tid}", "C09", True, "ESCALATE", "ERD-style emotion/personality inference about a candidate: block.", ["GT-0008"])
 
 
+def full_requirement_labels() -> None:
+    """Label every remaining (requirement, check) pair for C01-C03 (v2: no unlabelled requirement pairs).
+
+    Decided from the requirement text alone, using the rule in each check's docstring:
+      C01: a vague trait word with no number, threshold or test, and no ACTIVE role-memory definition.
+      C02: a years-of-experience count.
+      C03: no stated reason (because / so that / required by / purpose 'to').
+    Added after all v1 labels so existing label IDs don't change.
+    """
+    c01 = [
+        ("J1-R3", "No vague trait word; a years count (C02's concern)."),
+        ("J1-R5", "No vague trait word; measurable (60 wpm)."),
+        ("J2-R3", "No vague trait word; a years count (C02's concern)."),
+        ("J2-R4", "No vague trait word; an experience type."),
+        ("J3-R3", "No vague trait word; a years count (C02's concern)."),
+        ("J3-R4", "No vague trait word; a named certification (MO-201) is a test."),
+        ("J3-R5", "No vague trait word; a degree proxy, not an undefined trait."),
+        ("J3-R6", "No vague trait word; tested in the work sample."),
+    ]
+    for r, n in c01:
+        label(f"requirement:{r}", "C01", False, "VERIFIED", n, ["GT-0019", "GT-0021"])
+    c02 = [
+        ("J1-R1", "No years count."),
+        ("J1-R2", "No years count ('24 hours' is a time limit)."),
+        ("J1-R4", "No years count."),
+        ("J1-R5", "No years count."),
+        ("J2-R1", "No years count."),
+        ("J2-R2", "No years count."),
+        ("J2-R5", "No years count."),
+        ("J3-R1", "No years count."),
+        ("J3-R2", "No years count ('2-hour exercise' is a time limit)."),
+        ("J3-R4", "No years count."),
+        ("J3-R5", "No years count (degree proxy, not years)."),
+    ]
+    for r, n in c02:
+        label(f"requirement:{r}", "C02", False, "VERIFIED", n, ["GT-0019"])
+    c03 = [
+        ("J1-R3", True, "Years count with no reason stated."),
+        ("J1-R4", True, "No reason stated."),
+        ("J2-R3", True, "Go years with no reason stated (the backend is Python)."),
+        ("J2-R5", True, "No reason stated."),
+        ("J3-R1", True, "No reason stated."),
+        ("J3-R3", True, "Years count with no reason stated."),
+        ("J1-R1", False, "Reason stated: agents resolve escalated complaints."),
+        ("J2-R1", False, "Reason stated: the billing backend is Python."),
+        ("J2-R2", False, "Reason stated: the team owns uptime."),
+        ("J3-R6", False, "Reason stated: reports pull from SQL."),
+    ]
+    for r, p, n in c03:
+        label(f"requirement:{r}", "C03", p, "UNVERIFIED" if p else "VERIFIED", n, ["GT-0020"])
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--erd", default=None)
     a = ap.parse_args()
     erd_ai_text(a.erd)
+    full_requirement_labels()
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(os.path.dirname(LABELS), exist_ok=True)
 
