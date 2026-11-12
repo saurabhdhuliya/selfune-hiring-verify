@@ -20,8 +20,9 @@ D  decision      Outcome and stated reason
 ## Roll-up
 - The chain status is the worst verdict among its links (severity, lowest to highest: VERIFIED, WARN, NOT_CHECKED, UNVERIFIED, CONTRADICTED, ESCALATE).
 - The weakest link is the first link that isn't VERIFIED, in the order N → R → E → D, because everything downstream inherits its doubt.
+- **Inherited links don't count.** Role-need and requirement links built from job-level findings are marked `inherited: true` with the note "inherited from job". They stay in the chain for context, but chain status and weakest link come only from the decision's own evidence and decision links (C06, C08, C09, C11, C15). Job-level flags are reported once, as job-level issues with "affects N decisions", instead of being repeated in every chain.
 - High risk (a legal check, or a decision made by a tool alone) turns UNVERIFIED or CONTRADICTED into ESCALATE.
-- C9 blocks the whole chain.
+- C9 blocks the whole chain, but only when the C9-flagged tool is in the decision's `tools_used` (see `docs/schema.md`).
 
 ## Evidence links (taken from ERD)
 ERD separates **Behavior Confidence** (did it happen?) from **Explanation Confidence** (does it mean what we think?). The chain applies the same split to claims about the process:

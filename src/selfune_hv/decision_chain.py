@@ -16,6 +16,7 @@ VERDICTS = {"VERIFIED", "UNVERIFIED", "CONTRADICTED", "ESCALATE", "NOT_CHECKED",
 SEVERITY = {"VERIFIED": 0, "WARN": 1, "NOT_CHECKED": 2, "UNVERIFIED": 3, "CONTRADICTED": 4, "ESCALATE": 5}
 
 MAX_QUESTION_WORDS = 24  # "under 25 words"
+INHERITED_NOTE = "inherited from job"
 
 
 @dataclass
@@ -36,8 +37,11 @@ class Link:
     ledger_refs: list[str] = field(default_factory=list)
     check_refs: list[str] = field(default_factory=list)
     note: str = ""
+    inherited: bool = False   # comes from job-level findings; shown, but left out of the chain roll-up
 
     def __post_init__(self) -> None:
+        if self.inherited and not self.note.startswith(INHERITED_NOTE):
+            self.note = f"{INHERITED_NOTE}: {self.note}" if self.note else INHERITED_NOTE
         if self.type not in LINK_ORDER:
             raise ValueError(f"bad link type {self.type}")
         if self.status not in VERDICTS:
@@ -85,8 +89,11 @@ def roll_up(links: list[Link], high_risk: bool = False) -> tuple[str, Optional[s
     because everything downstream inherits its doubt. Status = worst verdict.
     High-risk chains (legal check involved, or decision by tool alone) escalate
     UNVERIFIED/CONTRADICTED to ESCALATE (section 5, step 4).
+    Inherited links (job-level findings) are left out: they are reported once per job, not per decision.
+    If every link is inherited, all links count.
     """
-    ordered = sorted(links, key=lambda l: LINK_ORDER.index(l.type))
+    own = [l for l in links if not l.inherited] or links
+    ordered = sorted(own, key=lambda l: LINK_ORDER.index(l.type))
     worst = max((l.status for l in ordered), key=lambda s: SEVERITY[s])
     weakest = next((l.link_id for l in ordered if l.status != "VERIFIED"), None)
     if high_risk and worst in ("UNVERIFIED", "CONTRADICTED"):
@@ -123,4 +130,4 @@ def build_chain(chain_id: str, job_id: str, candidate_ref: str, stage: str,
 
 
 def _clean(d: dict) -> dict:
-    return {k: v for k, v in d.items() if v not in (None, "", [])}
+    return {k: v for k, v in d.items() if v not in (None, "", []) and not (k == "inherited" and v is False)}

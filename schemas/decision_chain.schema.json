@@ -47,7 +47,8 @@
         "trait_ref": {"type": ["string", "null"], "description": "Role-memory trait_id used to verify a requirement."},
         "ledger_refs": {"type": "array", "items": {"type": "string", "pattern": "^GT-[0-9]{4}$"}},
         "check_refs": {"type": "array", "items": {"type": "string", "pattern": "^C(0[1-9]|1[0-5])$"}},
-        "note": {"type": "string"}
+        "note": {"type": "string"},
+        "inherited": {"type": "boolean", "description": "True when the link's status comes from job-level findings (role need, requirements). Inherited links are shown but left out of chain_status and weakest_link; the note starts with 'inherited from job'."}
       }
     },
     "human_question": {

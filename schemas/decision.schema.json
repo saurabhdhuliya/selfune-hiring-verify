@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://selfune.com/schemas/decision.schema.json",
+  "title": "Selfune Decision Record",
+  "description": "One hiring decision as the employer recorded it (one line of decisions.jsonl). Input to the loop. Describes the process, never the person: candidates are anonymous references only.",
+  "type": "object",
+  "required": ["decision_id", "candidate_ref", "job_id", "stage", "outcome", "reason_text", "fields_present", "fields_missing", "decision_date"],
+  "additionalProperties": false,
+  "properties": {
+    "decision_id": {"type": "string", "pattern": "^D[0-9]{4}$"},
+    "candidate_ref": {"type": "string", "pattern": "^CAND-[0-9]{4}$", "description": "Anonymous ID only. Never a name."},
+    "job_id": {"type": "string"},
+    "stage": {"enum": ["screen", "assessment", "interview", "offer"]},
+    "outcome": {"enum": ["rejected", "advanced", "on_hold"]},
+    "reason_text": {"type": "string", "description": "The stated reason, in the employer's words."},
+    "fields_present": {"type": "array", "items": {"type": "string"}},
+    "fields_missing": {"type": "array", "items": {"type": "string"}, "description": "Application fields that were empty. An empty field is a fact, not evidence about the applicant (C06)."},
+    "decision_date": {"type": "string", "format": "date"},
+    "decided_by": {"enum": ["human", "tool", "both"], "description": "Optional. If absent, C11 reports NOT_CHECKED: a solely automated decision can't be ruled out."},
+    "tools_used": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^T[0-9]+$"},
+      "uniqueItems": true,
+      "description": "Optional. tool_ids that produced input to this decision. C09 blocks the chain only when a C09-flagged tool is listed here. If absent, tool flags stay job-level issues."
+    }
+  }
+}

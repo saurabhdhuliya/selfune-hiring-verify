@@ -107,6 +107,10 @@ try:
     ok(True, "role_memory.json valid against schema")
 except jsonschema.ValidationError as e:
     ok(False, f"role_memory schema: {e.message}")
+ds = json.load(open("schemas/decision.schema.json"))
+bad_d = [(d["decision_id"], e.message) for d in jl("data/synthetic/decisions.jsonl")
+         for e in jsonschema.Draft202012Validator(ds).iter_errors(d)]
+ok(not bad_d, f"decisions.jsonl valid against decision schema ({bad_d[:3]})")
 for ch in json.load(open("examples/decision_chains.json")):
     try:
         jsonschema.validate(ch, dc)

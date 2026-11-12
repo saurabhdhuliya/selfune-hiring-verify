@@ -34,6 +34,8 @@ def main() -> int:
         f.write(render_html(report))
     s = report["summary"]
     print(f"{s['chains']} chains, all valid against the schema.")
+    print(f"Job-level issues:   {s['job_level_issues']} (" + ", ".join(
+        f"{k} {v}" for k, v in sorted(s["job_level_issues_by_verdict"].items())) + ")")
     print("Chains by status:  ", ", ".join(f"{k} {v}" for k, v in sorted(s["chains_by_status"].items())))
     print("Findings by verdict:", ", ".join(f"{k} {v}" for k, v in sorted(s["findings_by_verdict"].items())))
     print(f"Blocked chains: {s['blocked_chains']}. Human questions (deduplicated): {s['human_questions']}.")

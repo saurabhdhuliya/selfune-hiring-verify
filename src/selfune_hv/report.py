@@ -183,7 +183,7 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
     jobs = {j["job_id"]: j for j in data["company"]["jobs"]}
     chains, questions = [], {}
 
-    def link_from(link_id, typ, statement, flags: dict[str, dict], depends, base_route="code", **extra):
+    def link_from(link_id, typ, statement, flags: dict[str, dict], depends, base_route="code", inherited=False, **extra):
         status = worst(f["verdict"] for f in flags.values()) if flags else "NOT_CHECKED"
         refs = sorted({r for f in flags.values() for r in f["ledger_refs"]})
         notes = [f"{c}: {short_message(f['message'])}" for c, f in sorted(flags.items()) if f["verdict"] != "VERIFIED"]
@@ -191,28 +191,36 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
             notes = ["No check covered this link."]
         route = base_route if status == "VERIFIED" else "human"
         return Link(link_id=link_id, type=typ, statement=statement, status=status, route=route, depends_on=depends,
-                    ledger_refs=refs, check_refs=sorted(flags), note=" | ".join(notes), **extra)
+                    ledger_refs=refs, check_refs=sorted(flags), note=" | ".join(notes), inherited=inherited, **extra)
 
     for d in data["decisions"]:
         job = jobs[d["job_id"]]
         need = memory.role_need(job["job_id"])
+        # Role need and requirements come from job-level findings: inherited, left out of the roll-up.
         links = [Link("N1", "role_need", need or f"No role need recorded for {job['title']}.",
-                      "VERIFIED" if need else "NOT_CHECKED", "role_memory" if need else "human")]
-        qs: list[tuple[tuple, HumanQuestion]] = []
+                      "VERIFIED" if need else "NOT_CHECKED", "role_memory" if need else "human", inherited=True)]
+        job_qs: list[tuple[tuple, HumanQuestion]] = []   # report-level only, not repeated in every chain
+        qs: list[tuple[tuple, HumanQuestion]] = []       # this decision's own links
         if not need:
-            qs.append(((job["job_id"], "N"), _q("N1", f"In one sentence, why does the {job['title']} role exist?",
-                                                 "Every requirement is checked against the role need.", store="role_memory")))
+            job_qs.append(((job["job_id"], "N"), _q("N1", f"In one sentence, why does the {job['title']} role exist?",
+                                                     "Every requirement is checked against the role need.", store="role_memory")))
         r_ids = []
         for r in job.get("requirements", []):
             lid = "R" + r["req_id"].split("-R")[-1]
             flags = {c: f for c, f in by_ref[f"requirement:{r['req_id']}"].items() if c in REQ_CHECKS}
             trait = flags.get("C01", {}).get("trait_ref")
             links.append(link_from(lid, "requirement", r["text"], flags, ["N1"],
-                                   "role_memory" if trait else "code", trait_ref=trait))
-            qs += requirement_questions(lid, r, job["title"], flags)
+                                   "role_memory" if trait else "code", trait_ref=trait, inherited=True))
+            job_qs += requirement_questions(lid, r, job["title"], flags)
             r_ids.append(lid)
         dflags = by_ref[f"decision:{d['decision_id']}"]
         e_flags = {c: f for c, f in dflags.items() if c in EVIDENCE_CHECKS}
+        # C09 on a tool counts for this decision only if the decision lists that tool in tools_used.
+        used_c09 = [by_ref[f"tool:{t}"]["C09"] for t in d.get("tools_used", []) if "C09" in by_ref.get(f"tool:{t}", {})]
+        if used_c09:
+            tool_c09 = max(used_c09, key=lambda f: SEVERITY[f["verdict"]])
+            if "C09" not in e_flags or SEVERITY[tool_c09["verdict"]] > SEVERITY[e_flags["C09"]["verdict"]]:
+                e_flags["C09"] = tool_c09
         extra = {"observed": d.get("reason_text", ""), "observed_confidence": "High"}
         if e_flags.get("C06", {}).get("verdict") == "UNVERIFIED":
             extra = {"observed": f"Field(s) empty: {', '.join(d['fields_missing'])}.", "observed_confidence": "High",
@@ -227,13 +235,14 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
 
         high_risk = d.get("decided_by") == "tool" or any(
             c in LEGAL_CHECKS and f["verdict"] not in ("VERIFIED", "WARN") for c, f in dflags.items())
-        blocked = any(f["verdict"] == "ESCALATE" for c, f in dflags.items() if c == "C09")
+        blocked = e_flags.get("C09", {}).get("verdict") == "ESCALATE"
         chain = build_chain(f"CH-{d['decision_id']}", job["job_id"], d["candidate_ref"], d["stage"], links,
                             [q for _, q in qs], high_risk=high_risk, blocked=blocked)
         chain["_decision"] = {"decision_id": d["decision_id"], "outcome": d["outcome"],
-                              "decided_by": d.get("decided_by"), "high_risk": high_risk}
+                              "decided_by": d.get("decided_by"), "high_risk": high_risk,
+                              "tools_used": d.get("tools_used")}
         chains.append(chain)
-        for key, q in qs:
+        for key, q in job_qs + qs:
             entry = questions.setdefault(key, {"job_id": job["job_id"], "ask": q.ask, "why": q.why,
                                                "do_not_ask": q.do_not_ask, "store_answer_in": q.store_answer_in,
                                                "about": None, "applies_to": []})
@@ -265,6 +274,39 @@ def ledger_warnings(rows: dict[str, dict], cited: set[str], today: date) -> list
     return out
 
 
+# ---------------------------------------------------------------- job-level issues
+CATEGORIES = [("requirement:", "requirement"), ("job:", "selection method"), ("tool:", "tool"),
+              ("probe_pair:", "tool (name-swap probe)"), ("group_counts:", "group counts"),
+              ("ai_text:", "AI-written text"), ("policy:", "policy statement")]
+
+
+def category(ref: str) -> str:
+    return next((name for prefix, name in CATEGORIES if ref.startswith(prefix)), "other")
+
+
+def job_level_issues(findings: list[dict], data: dict) -> list[dict]:
+    """One row per non-VERIFIED job-level finding, with how many decisions it affects.
+
+    A tool flag affects a decision in the tool's jobs unless that decision lists tools_used without the tool.
+    """
+    probe_tool = {p["pair_id"]: p.get("tool_id") for p in data["probes"]}
+    rows = []
+    for f in findings:
+        if f["verdict"] == "VERIFIED" or f["object_ref"].startswith("decision:"):
+            continue
+        jobs = set(f.get("job_ids", []))
+        ref = f["object_ref"]
+        tool = ref.split(":")[1] if ref.startswith("tool:") else probe_tool.get(ref.split(":")[1]) if ref.startswith("probe_pair:") else None
+        affected = [d["decision_id"] for d in data["decisions"] if d["job_id"] in jobs
+                    and (tool is None or "tools_used" not in d or tool in d["tools_used"])]
+        rows.append({"object_ref": ref, "category": category(ref), "check": f["check"], "verdict": f["verdict"],
+                     "job_ids": sorted(jobs), "tool_id": tool, "affects_decisions": len(affected),
+                     "ledger_refs": f["ledger_refs"], "message": short_message(f["message"])})
+    order = {v: i for i, v in enumerate(["ESCALATE", "CONTRADICTED", "UNVERIFIED", "NOT_CHECKED", "WARN"])}
+    rows.sort(key=lambda r: (r["job_ids"], order.get(r["verdict"], 9), r["object_ref"], r["check"]))
+    return rows
+
+
 # ---------------------------------------------------------------- report
 def build_report(root: Path = REPO_ROOT, today: date | None = None) -> dict:
     root = Path(root)
@@ -277,16 +319,20 @@ def build_report(root: Path = REPO_ROOT, today: date | None = None) -> dict:
     for f in non_decision:
         f["job_ids"] = sorted(j for j in jobs_for(f["object_ref"], idx) if j)
     cited = {r for f in findings for r in f["ledger_refs"]}
+    issues = job_level_issues(non_decision, data)
     return {
         "employer": data["company"]["employer_name"],
         "generated_on": today.isoformat(),
         "summary": {
+            "job_level_issues": len(issues),
+            "job_level_issues_by_verdict": dict(Counter(i["verdict"] for i in issues)),
             "chains": len(chains),
             "chains_by_status": dict(Counter(c["chain_status"] for c in chains)),
             "findings_by_verdict": dict(Counter(f["verdict"] for f in findings)),
             "blocked_chains": sum(c["blocked"] for c in chains),
             "human_questions": len(questions),
         },
+        "job_level_issues": issues,
         "questions": questions,
         "chains": chains,
         "job_and_tool_findings": non_decision,
@@ -354,8 +400,22 @@ def render_html(report: dict) -> str:
     out = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
            f"<title>Process Verification Report</title><style>{_CSS}</style></head><body><main>",
            f"<h1>Hiring process verification</h1><div class='muted'>{_e(report['employer'])} · generated {_e(report['generated_on'])} · "
-           f"{s['chains']} decision chains</div>",
-           "<h2>Decision chains by verdict</h2><div class='cards'>"]
+           f"{s['chains']} decision chains</div>"]
+    issues = report["job_level_issues"]
+    out.append(f"<h2>Job-level issues ({len(issues)})</h2><div class='muted'>Flags on requirements, selection method, "
+               "tools and group counts. Each is reported once here, not repeated in every decision chain.</div><div class='cards'>")
+    for v in ORDER:
+        if s["job_level_issues_by_verdict"].get(v):
+            out.append(f"<div class='card'>{_badge(v)}<b>{s['job_level_issues_by_verdict'][v]}</b></div>")
+    out.append("</div><div class='wrap'><table><tr><th>Job</th><th>Issue</th><th>Check</th><th>Verdict</th>"
+               "<th>Affects</th><th>Source</th></tr>")
+    for i in issues:
+        out.append(f"<tr><td>{_e(', '.join(i['job_ids']))}</td><td>{_e(i['category'])}: {_e(i['object_ref'])}"
+                   f"<div class='muted'>{_e(_short(i['message'], 18))}</div></td><td>{_e(i['check'])}</td>"
+                   f"<td>{_badge(i['verdict'])}</td><td>affects {i['affects_decisions']} decision"
+                   f"{'s' if i['affects_decisions'] != 1 else ''}</td><td>{_cites(i['ledger_refs'], cites)}</td></tr>")
+    out.append("</table></div><h2>Decision chains by verdict</h2><div class='muted'>From each decision's own evidence "
+               "and decision links only (C06, C08, C09, C11, C15).</div><div class='cards'>")
     for v in ORDER:
         if s["chains_by_status"].get(v):
             out.append(f"<div class='card'>{_badge(v)}<b>{s['chains_by_status'][v]}</b></div>")
