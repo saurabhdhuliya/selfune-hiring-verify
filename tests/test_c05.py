@@ -42,8 +42,25 @@ def test_finding_shape_and_citation():
         assert set(f) == {"object_ref", "check", "verdict", "ledger_refs", "message"}
         assert f["check"] == "C05"
         assert f["ledger_refs"] == ["GT-0023"]
-        assert "flag for review, not a legal finding" in f["message"]
+        assert "Flag for review, not legal advice." in f["message"]
+        assert "screening heuristic whose federal guideline status is changing (GT-0023)" in f["message"]
         assert "GT-0023" in f["message"] and "retrieved 2026-11-11" in f["message"]
+
+
+def test_statistical_flag_wording():
+    f = by_ref(c05.run(ROOT))
+    assert f["group_counts:J1:sex_self_reported"]["message"].startswith(
+        "Statistical flag: impact ratio 0.43 below 0.8. The four-fifths rule is a screening heuristic whose federal "
+        "guideline status is changing (GT-0023); disparity still matters under discrimination law. "
+        "Flag for review, not legal advice.")
+    assert f["group_counts:J2:sex_self_reported"]["message"].startswith("Statistical check: impact ratio 0.89")
+
+
+def test_pending_ledger_row_does_not_soften_unverified():
+    """Hard rule 7: a pending row never causes a hard fail; UNVERIFIED is a question, not a fail."""
+    f = by_ref(c05.run(ROOT))["group_counts:J1:age_band"]
+    assert f["verdict"] == "UNVERIFIED"
+    assert "GT-0023 is PENDING_RELOCK" in f["message"]
 
 
 def test_job_without_counts_is_never_verified(make_root):

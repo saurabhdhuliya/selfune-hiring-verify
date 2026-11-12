@@ -34,6 +34,14 @@ def _finding(object_ref: str, verdict: str, message: str) -> dict:
     }
 
 
+def impact_ratio(groups: dict[str, dict]) -> float | None:
+    """Lowest selection rate / highest, or None when undefined."""
+    rates = [c["selected"] / c["applied"] for c in groups.values() if c.get("applied", 0) > 0]
+    if len(rates) < 2 or max(rates) == 0:
+        return None
+    return min(rates) / max(rates)
+
+
 def evaluate_grouping(groups: dict[str, dict]) -> tuple[str, str]:
     """Return (verdict, detail) for one grouping, e.g. {"women": {"applied": 40, "selected": 6}, ...}."""
     rates = {g: c["selected"] / c["applied"] for g, c in groups.items() if c.get("applied", 0) > 0}
@@ -68,16 +76,19 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
     row = ledger.load(str(root / "ledger/hiring.jsonl"))[LEDGER_ID]
     citation = ledger.cite(row)
     warnings = ledger.row_warnings(row)
-    # Hard rule 7: a contested or unlocked row only warns, never fails.
-    soft = row["use_as"] == "warn_only" or row["user_decision"] != "LOCKED"
+    # The verdict is a code result (the ratio); GT-0023 is cited for context. UNVERIFIED is never a hard
+    # fail (hard rule 7), so a pending GT-0023 shows up as a ledger warning in the message, not a softer verdict.
+    heuristic = ("The four-fifths rule is a screening heuristic whose federal guideline status is changing "
+                 f"({LEDGER_ID}); disparity still matters under discrimination law. Flag for review, not legal advice.")
 
-    def message(verdict: str, detail: str) -> str:
+    def message(verdict: str, detail: str, ratio: float | None = None) -> str:
         if verdict == "UNVERIFIED":
-            head = "Possible adverse impact: flag for review, not a legal finding."
+            head = f"Statistical flag: impact ratio {ratio:.2f} below {THRESHOLD}. {heuristic}"
         elif verdict == "VERIFIED":
-            head = "No adverse impact under the 4/5 rule: flag for review, not a legal finding."
+            head = (f"Statistical check: impact ratio {ratio:.2f} at or above {THRESHOLD}; this does not rule out "
+                    f"discrimination. {heuristic}")
         else:
-            head = "Not checked: flag for review, not a legal finding."
+            head = f"Not checked: this is not a pass. {heuristic}"
         tail = f" Source: {citation}."
         if warnings:
             tail += " Ledger warnings: " + " ".join(warnings)
@@ -94,7 +105,6 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
             continue
         for grouping, groups in groupings.items():
             verdict, detail = evaluate_grouping(groups)
-            if soft and verdict == "UNVERIFIED":
-                verdict = "WARN"
-            findings.append(_finding(f"group_counts:{job_id}:{grouping}", verdict, message(verdict, detail)))
+            findings.append(_finding(f"group_counts:{job_id}:{grouping}", verdict,
+                                     message(verdict, detail, impact_ratio(groups))))
     return findings

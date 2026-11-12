@@ -42,7 +42,12 @@ class Sources:
                    for i in ids)
 
     def soften(self, verdict: str, ids: list[str]) -> str:
-        if verdict in ("UNVERIFIED", "CONTRADICTED", "ESCALATE") and self.soft(ids):
+        """Hard rule 7: contested or pending rows never cause a hard fail.
+
+        Only hard fails (CONTRADICTED, ESCALATE) drop to WARN. UNVERIFIED stays: it is not a fail but a
+        question for a human, and a pending row is a reason to ask, not to stay quiet.
+        """
+        if verdict in ("CONTRADICTED", "ESCALATE") and self.soft(ids):
             return "WARN"
         return verdict
 

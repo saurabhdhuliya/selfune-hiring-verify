@@ -5,6 +5,7 @@ and ledger/hiring.jsonl. Never reads labels/. Never labels a person: it only fla
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from selfune_hv.emotion_terms import has_inference_cue, mentions_banned_construct
@@ -39,16 +40,39 @@ def evaluate_text(text: str) -> tuple[str, str]:
     return "VERIFIED", "No emotion or personality inference."
 
 
-def _msg(verdict: str, detail: str, cite: str, what: str = "text") -> str:
-    """`what` is "tool" or "text". A finding never says "Blocked": only a chain that uses the tool/text is blocked."""
+# Video, voice, face, body or behavioural signals: the inputs the EU AI Act ban covers (GT-0008).
+BIOMETRIC = re.compile(r"\b(?:video|webcam|camera|voice|vocal|tone of voice|speech|audio|face|facial|"
+                       r"micro-?expressions?|expressions?|gaze|eye[- ]tracking|posture|gestures?|body language|"
+                       r"keystrokes?|typing (?:pattern|rhythm)|mouse movements?|heart rate|biometric\w*|physiolog\w*)\b",
+                       re.I)
+
+
+def biometric_input(*texts: str) -> bool:
+    """True when the tool or text works from video, voice, face or behavioural signals."""
+    return any(BIOMETRIC.search(t or "") for t in texts)
+
+
+def _msg(verdict: str, detail: str, cite: str, what: str = "text", biometric: bool = False) -> str:
+    """`what` is "tool" or "text". Only a chain that uses the tool/text is actually blocked.
+
+    Biometric input: the EU AI Act ban applies (GT-0008). Text only: blocked by Selfune policy, not by law.
+    """
     if verdict == "ESCALATE":
-        return f"Would block any decision chain that uses this {what}: {LEGAL}. {detail}{cite}"
+        head = f"Would block any decision chain that uses this {what}: "
+        if biometric:
+            return (f"{head}{LEGAL}. EU AI Act prohibits inferring emotions from biometric data at work "
+                    f"(GT-0008). {detail}{cite}")
+        return (f"{head}Blocked by Selfune hard rule 1 (policy, not a legal claim); EU AI Act ban covers "
+                f"biometric inference (GT-0008). {detail}{cite}")
     if verdict == "UNVERIFIED":
         return f"Ask a human: {LEGAL}. {detail}{cite}"
     if verdict == "NOT_CHECKED":
         return f"Not checked: {detail}{cite}"
     return f"{detail}{cite}"
 
+
+# C09 verdicts come from hard rule 1 (Selfune policy), not from the ledger row, so they are never softened
+# when GT-0008 is pending re-lock; the row's status still shows as a ledger warning in the message.
 
 def run(root: Path = REPO_ROOT) -> list[dict]:
     root = Path(root)
@@ -57,12 +81,14 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
     findings = []
     for tool in load_json(root / "data/synthetic/tools.json"):
         verdict, detail = evaluate_tool(tool)
-        verdict = src.soften(verdict, REFS)
-        findings.append(finding(CHECK_ID, f"tool:{tool['tool_id']}", verdict, REFS, _msg(verdict, detail, cite, "tool")))
+        bio = biometric_input(tool.get("what_it_outputs", ""), tool.get("name", ""), *tool.get("vendor_claims", []))
+        findings.append(finding(CHECK_ID, f"tool:{tool['tool_id']}", verdict, REFS,
+                                _msg(verdict, detail, cite, "tool", bio)))
     for t in load_jsonl(root / "data/synthetic/ai_text.jsonl"):
         verdict, detail = evaluate_text(t.get("text", ""))
-        verdict = src.soften(verdict, REFS)
-        findings.append(finding(CHECK_ID, f"ai_text:{t['text_id']}", verdict, REFS, _msg(verdict, detail, cite)))
+        bio = biometric_input(t.get("text", ""), t.get("source", ""))
+        findings.append(finding(CHECK_ID, f"ai_text:{t['text_id']}", verdict, REFS,
+                                _msg(verdict, detail, cite, "text", bio)))
     return findings
 
 
@@ -74,6 +100,6 @@ def run_corpus(root: Path = REPO_ROOT) -> list[dict]:
     findings = []
     for t in load_jsonl(root / CORPUS):
         verdict, detail = evaluate_text(t.get("text", ""))
-        verdict = src.soften(verdict, REFS)
-        findings.append(finding(CHECK_ID, f"c9_corpus:{t['c9_id']}", verdict, REFS, _msg(verdict, detail, cite)))
+        findings.append(finding(CHECK_ID, f"c9_corpus:{t['c9_id']}", verdict, REFS,
+                                _msg(verdict, detail, cite, "text", biometric_input(t.get("text", "")))))
     return findings

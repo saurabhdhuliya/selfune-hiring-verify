@@ -24,7 +24,7 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 ## What is here
 | Path | What |
 |---|---|
-| `ledger/hiring.jsonl` | 50 rule rows with `recheck_by`, `use_as` and `display_label`. GT-0009 and GT-0025 were re-checked on 2026-11-12 and wait for a human re-lock. |
+| `ledger/hiring.jsonl` | 50 rule rows with `recheck_by`, `use_as` and `display_label`. GT-0009 and GT-0025 were re-checked on 2026-11-12, and GT-0008, GT-0023 and GT-0035 were changed after the 2026-11-12 adversary check; all five wait for a human re-lock. Pending rows never cause a hard fail (ESCALATE or CONTRADICTED drops to WARN); UNVERIFIED still asks a human. |
 | `schemas/decision_chain.schema.json` | The decision chain format: one verdict per link, the weakest link, and questions for a human. |
 | `schemas/role_memory.schema.json` | The employer's trait definitions, written once per role and locked by a human. |
 | `src/selfune_hv/` | Chain roll-up, role-memory lookup, ledger warnings and C9 vocabulary. No LLM. |
