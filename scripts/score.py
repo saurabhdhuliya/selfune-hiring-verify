@@ -22,6 +22,8 @@ import selfune_hv.checks as checks_pkg  # noqa: E402
 LABELS_DIR = (ROOT / "labels").resolve()
 OUT = ROOT / "out" / "findings.jsonl"
 MAX_FALSE_ALARM = 0.10
+# Checks with a separate corpus (run_corpus): check -> (findings file in out/, labels file, object_ref prefix, id key)
+CORPORA = {"C09": ("c9_findings.jsonl", "c9_labels.jsonl", "c9_corpus:", "c9_id")}
 
 _guard_on = False
 
@@ -36,21 +38,51 @@ def _labels_guard(event: str, args: tuple) -> None:
             raise PermissionError(f"A check tried to read {p}. Checks must never read labels/.")
 
 
-def run_checks() -> tuple[list[dict], list[str]]:
+def _guarded(fn):
     global _guard_on
-    findings, ran = [], []
+    _guard_on = True
+    try:
+        return fn(ROOT)
+    finally:
+        _guard_on = False
+
+
+def run_checks() -> tuple[list[dict], list[str], dict[str, list[dict]]]:
+    findings, ran, corpus = [], [], {}
     for mod_info in sorted(pkgutil.iter_modules(checks_pkg.__path__), key=lambda m: m.name):
         mod = importlib.import_module(f"{checks_pkg.__name__}.{mod_info.name}")
         if not (hasattr(mod, "CHECK_ID") and hasattr(mod, "run")):
             continue
-        _guard_on = True
-        try:
-            out = mod.run(ROOT)
-        finally:
-            _guard_on = False
-        findings.extend(out)
+        findings.extend(_guarded(mod.run))
         ran.append(mod.CHECK_ID)
-    return findings, ran
+        if hasattr(mod, "run_corpus") and mod.CHECK_ID in CORPORA:
+            corpus[mod.CHECK_ID] = _guarded(mod.run_corpus)
+    return findings, ran, corpus
+
+
+def write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+
+def score_corpus(check: str, findings: list[dict]) -> bool:
+    """Corpus labels are {<id>, block: bool}. Caught = blocked item gets ESCALATE; false alarm = allowed item does."""
+    _, labels_file, prefix, id_key = CORPORA[check]
+    with open(LABELS_DIR / labels_file, encoding="utf-8") as f:
+        labels = [json.loads(l) for l in f if l.strip()]
+    got = {fd["object_ref"]: fd["verdict"] for fd in findings}
+    block = [l for l in labels if l["block"]]
+    allow = [l for l in labels if not l["block"]]
+    caught = sum(got.get(prefix + l[id_key]) == "ESCALATE" for l in block)
+    missing = sum(prefix + l[id_key] not in got for l in labels)
+    fa = sum(got.get(prefix + l[id_key]) == "ESCALATE" for l in allow)
+    fa_rate = fa / len(allow) if allow else 0.0
+    ok = caught == len(block) and fa_rate < MAX_FALSE_ALARM and missing == 0
+    print(f"{check} corpus ({labels_file}): caught {caught}/{len(block)}, missed {len(block) - caught}, "
+          f"false alarms {fa}/{len(allow)}, no finding {missing}  {'PASS' if ok else 'FAIL'}")
+    return ok
 
 
 def load_labels() -> list[dict]:
@@ -115,13 +147,19 @@ def score(findings: list[dict], labels: list[dict], ran: list[str]) -> bool:
 
 def main() -> int:
     sys.addaudithook(_labels_guard)
-    findings, ran = run_checks()
-    OUT.parent.mkdir(exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as f:
-        for fd in findings:
-            f.write(json.dumps(fd, ensure_ascii=False) + "\n")
-    print(f"Ran {', '.join(ran) or 'no checks'}: {len(findings)} findings -> {OUT.relative_to(ROOT)}\n")
+    findings, ran, corpus = run_checks()
+    write_jsonl(OUT, findings)
+    print(f"Ran {', '.join(ran) or 'no checks'}: {len(findings)} findings -> {OUT.relative_to(ROOT)}")
+    for check, rows in corpus.items():
+        path = OUT.parent / CORPORA[check][0]
+        write_jsonl(path, rows)
+        print(f"Ran {check} corpus: {len(rows)} findings -> {path.relative_to(ROOT)}")
+    print()
     ok = score(findings, load_labels(), ran)
+    if corpus:
+        print()
+    for check, rows in corpus.items():
+        ok &= score_corpus(check, rows)
     print("\nRelease rule: 100% planted caught, 100% NOT_CHECKED correct, false alarms < 10%.")
     print("Overall:", "PASS" if ok else "FAIL")
     return 0 if ok else 1

@@ -52,6 +52,19 @@ def finding(check: str, object_ref: str, verdict: str, ledger_refs: list[str], m
             "ledger_refs": list(ledger_refs), "message": message}
 
 
+MISSING = object()
+
+
+def jobs_in(company: dict, code: str) -> set[str]:
+    """Job IDs whose declared jurisdiction includes `code` (e.g. "EU", "IL", "IN", "NYC")."""
+    return {j["job_id"] for j in company["jobs"] if code in (j.get("jurisdiction") or [])}
+
+
+def tools_for(tools: list[dict], job_ids: set[str]) -> list[dict]:
+    """Tools used on at least one of the given jobs."""
+    return [t for t in tools if job_ids.intersection(t.get("job_ids") or [])]
+
+
 def parse_date(value) -> date | None:
     """ISO date or None if missing/unparseable."""
     if not isinstance(value, str):
