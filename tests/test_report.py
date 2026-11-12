@@ -224,6 +224,73 @@ def test_decisions_valid_against_decision_schema():
     assert list(v.iter_errors({**json.loads(line), "tools_used": ["ScreenRank"]}))
 
 
+# ---------------------------------------------------------------- fix 1: links cite only flagging findings
+def test_links_cite_only_non_verified_findings(report):
+    d1 = next(l for l in _chain(report, "CH-D0082")["links"] if l["link_id"] == "D1")
+    assert d1["ledger_refs"] == ["GT-0048", "GT-0049"]      # C11 flagged; C08 passed, so no GT-0024/GT-0027
+    for c in report["chains"]:
+        for l in c["links"]:
+            if l["status"] == "VERIFIED":
+                assert "ledger_refs" not in l, (c["chain_id"], l["link_id"])
+
+
+# ---------------------------------------------------------------- fix 2: C09 wording
+def test_c09_findings_say_would_block_not_blocked(report):
+    f = {(x["object_ref"], x["check"]): x for x in report["job_and_tool_findings"]}
+    assert f[("tool:T6", "C09")]["message"].startswith("Would block any decision chain that uses this tool")
+    assert f[("ai_text:AT09", "C09")]["message"].startswith("Would block any decision chain that uses this text")
+    assert not any("Blocked" in x["message"] for x in report["job_and_tool_findings"])
+
+
+def test_blocked_only_on_blocked_chains(report, page):
+    assert report["summary"]["blocked_chains"] == 0
+    assert "Blocked" not in json.dumps(report) and "Blocked" not in page
+
+
+def test_blocked_chain_says_blocked(synthetic_root):
+    r = _with_tools_used(synthetic_root, {"D0084": ["T6"]})
+    for c in r["chains"]:
+        says = "Blocked" in json.dumps(c)
+        assert says is c["blocked"], c["chain_id"]
+    e1 = next(l for l in _chain(r, "CH-D0084")["links"] if l["link_id"] == "E1")
+    assert e1["note"].startswith("Blocked: C09 flagged tool:T6")
+    assert rep.render_html(r).count("Blocked (C09)") == 1
+
+
+# ---------------------------------------------------------------- fix 3: source labels in citations
+def test_every_citation_shows_display_label_before_url(report, page):
+    assert "GT-0019 · Selfune study, not independently verified · " in page
+    assert "GT-0008 · What secondary sources report; not checked against the primary text · " in page
+    for rid in re.findall(r"(GT-\d{4}) · ", page):
+        c = report["citations"][rid]
+        assert f'{rid} · {c["label"]} · <a href="{c["url"]}">' in page
+
+
+# ---------------------------------------------------------------- fix 4: all ledger warnings
+def test_ledger_warnings_include_uncited_rows(report, page):
+    cited = {r for f in report["job_and_tool_findings"] for r in f["ledger_refs"]}
+    ids = {w["id"] for w in report["ledger_warnings"]}
+    assert {"GT-0009", "GT-0025"} <= ids
+    assert "GT-0025" not in cited                     # listed although no finding cites it
+    assert "GT-0025 · " in page
+
+
+def test_ledger_warnings_cover_expired_and_contested(synthetic_root):
+    root = synthetic_root()
+    path = root / "ledger/hiring.jsonl"
+    rows = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l]
+    for r in rows:
+        if r["id"] == "GT-0040":
+            r["recheck_by"] = "2026-01-01"
+        if r["id"] == "GT-0041":
+            r["status"], r["use_as"] = "CONTESTED", "warn_only"
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    w = {x["id"]: x["warnings"] for x in rep.build_report(root, today=TODAY)["ledger_warnings"]}
+    assert any("expired on 2026-01-01" in s for s in w["GT-0040"])
+    assert any("contested" in s for s in w["GT-0041"])
+    assert any("PENDING_RELOCK" in s for s in w["GT-0009"])
+
+
 def test_report_code_never_references_labels():
     literal = re.compile(r"""["'][^"'\n]*labels""")
     for p in (ROOT / "src/selfune_hv/report.py", ROOT / "scripts/run_loop.py"):

@@ -38,7 +38,7 @@ def main() -> int:
         f"{k} {v}" for k, v in sorted(s["job_level_issues_by_verdict"].items())) + ")")
     print("Chains by status:  ", ", ".join(f"{k} {v}" for k, v in sorted(s["chains_by_status"].items())))
     print("Findings by verdict:", ", ".join(f"{k} {v}" for k, v in sorted(s["findings_by_verdict"].items())))
-    print(f"Blocked chains: {s['blocked_chains']}. Human questions (deduplicated): {s['human_questions']}.")
+    print(f"Chains stopped by C09: {s['blocked_chains']}. Human questions (deduplicated): {s['human_questions']}.")
     print(f"Ledger warnings: {len(report['ledger_warnings'])}.")
     print("Wrote out/report.json and out/report.html")
     return 0

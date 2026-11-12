@@ -39,9 +39,10 @@ def evaluate_text(text: str) -> tuple[str, str]:
     return "VERIFIED", "No emotion or personality inference."
 
 
-def _msg(verdict: str, detail: str, cite: str) -> str:
+def _msg(verdict: str, detail: str, cite: str, what: str = "text") -> str:
+    """`what` is "tool" or "text". A finding never says "Blocked": only a chain that uses the tool/text is blocked."""
     if verdict == "ESCALATE":
-        return f"Blocked (C9 blocks the whole chain): {LEGAL}. {detail}{cite}"
+        return f"Would block any decision chain that uses this {what}: {LEGAL}. {detail}{cite}"
     if verdict == "UNVERIFIED":
         return f"Ask a human: {LEGAL}. {detail}{cite}"
     if verdict == "NOT_CHECKED":
@@ -57,7 +58,7 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
     for tool in load_json(root / "data/synthetic/tools.json"):
         verdict, detail = evaluate_tool(tool)
         verdict = src.soften(verdict, REFS)
-        findings.append(finding(CHECK_ID, f"tool:{tool['tool_id']}", verdict, REFS, _msg(verdict, detail, cite)))
+        findings.append(finding(CHECK_ID, f"tool:{tool['tool_id']}", verdict, REFS, _msg(verdict, detail, cite, "tool")))
     for t in load_jsonl(root / "data/synthetic/ai_text.jsonl"):
         verdict, detail = evaluate_text(t.get("text", ""))
         verdict = src.soften(verdict, REFS)

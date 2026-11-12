@@ -185,7 +185,8 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
 
     def link_from(link_id, typ, statement, flags: dict[str, dict], depends, base_route="code", inherited=False, **extra):
         status = worst(f["verdict"] for f in flags.values()) if flags else "NOT_CHECKED"
-        refs = sorted({r for f in flags.values() for r in f["ledger_refs"]})
+        # Cite only rows behind findings that flagged something; a passing check's rows support nothing here.
+        refs = sorted({r for f in flags.values() if f["verdict"] != "VERIFIED" for r in f["ledger_refs"]})
         notes = [f"{c}: {short_message(f['message'])}" for c, f in sorted(flags.items()) if f["verdict"] != "VERIFIED"]
         if not flags:
             notes = ["No check covered this link."]
@@ -236,6 +237,10 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
         high_risk = d.get("decided_by") == "tool" or any(
             c in LEGAL_CHECKS and f["verdict"] not in ("VERIFIED", "WARN") for c, f in dflags.items())
         blocked = e_flags.get("C09", {}).get("verdict") == "ESCALATE"
+        if blocked:
+            e1 = next(l for l in links if l.link_id == "E1")
+            src = e_flags["C09"]["object_ref"]
+            e1.note = f"Blocked: C09 flagged {src}, which this decision uses. Not evaluated further. | {e1.note}"
         chain = build_chain(f"CH-{d['decision_id']}", job["job_id"], d["candidate_ref"], d["stage"], links,
                             [q for _, q in qs], high_risk=high_risk, blocked=blocked)
         chain["_decision"] = {"decision_id": d["decision_id"], "outcome": d["outcome"],
@@ -258,9 +263,10 @@ def citation(row: dict) -> dict:
             "retrieved": row["evidence"]["retrieved"]}
 
 
-def ledger_warnings(rows: dict[str, dict], cited: set[str], today: date) -> list[dict]:
+def ledger_warnings(rows: dict[str, dict], today: date) -> list[dict]:
+    """Every ledger row with a warning (expired, not locked, contested), cited in this run or not."""
     out = []
-    for rid in sorted(cited):
+    for rid in sorted(rows):
         r = rows[rid]
         reasons = []
         if date.fromisoformat(r["recheck_by"]) < today:
@@ -318,7 +324,8 @@ def build_report(root: Path = REPO_ROOT, today: date | None = None) -> dict:
     non_decision = [f for f in findings if not f["object_ref"].startswith("decision:")]
     for f in non_decision:
         f["job_ids"] = sorted(j for j in jobs_for(f["object_ref"], idx) if j)
-    cited = {r for f in findings for r in f["ledger_refs"]}
+    warnings = ledger_warnings(data["ledger"], today)
+    cited = {r for f in findings for r in f["ledger_refs"]} | {w["id"] for w in warnings}
     issues = job_level_issues(non_decision, data)
     return {
         "employer": data["company"]["employer_name"],
@@ -336,7 +343,7 @@ def build_report(root: Path = REPO_ROOT, today: date | None = None) -> dict:
         "questions": questions,
         "chains": chains,
         "job_and_tool_findings": non_decision,
-        "ledger_warnings": ledger_warnings(data["ledger"], cited, today),
+        "ledger_warnings": warnings,
         "citations": {rid: citation(data["ledger"][rid]) for rid in sorted(cited)},
         "jobs": [{"job_id": j["job_id"], "title": j["title"], "jurisdiction": j.get("jurisdiction", []),
                   "requirements": j.get("requirements", [])} for j in data["company"]["jobs"]],
@@ -383,8 +390,8 @@ def _badge(v: str) -> str:
 def _cites(refs: list[str], cites: dict) -> str:
     if not refs:
         return '<div class="cite">No ledger row: code result on the employer\'s data.</div>'
-    parts = [f'{_e(r)} · <a href="{_e(cites[r]["url"])}">{_e(cites[r]["url"])}</a> · retrieved {_e(cites[r]["retrieved"])}'
-             for r in refs]
+    parts = [f'{_e(r)} · {_e(cites[r]["label"])} · <a href="{_e(cites[r]["url"])}">{_e(cites[r]["url"])}</a> · '
+             f'retrieved {_e(cites[r]["retrieved"])}' for r in refs]
     return '<div class="cite">' + "<br>".join(parts) + "</div>"
 
 
@@ -421,7 +428,7 @@ def render_html(report: dict) -> str:
             out.append(f"<div class='card'>{_badge(v)}<b>{s['chains_by_status'][v]}</b></div>")
     out.append("</div><div class='muted'>All findings: " + ", ".join(
         f"{v} {s['findings_by_verdict'][v]}" for v in ORDER if s["findings_by_verdict"].get(v)) +
-        f". Blocked chains: {s['blocked_chains']}.</div>")
+        f". Chains stopped by C09: {s['blocked_chains']}.</div>")
 
     out.append(f"<h2>Questions for you ({len(report['questions'])})</h2><ol class='q'>")
     for q in sorted(report["questions"], key=lambda q: (q["job_id"], q["store_answer_in"] != "role_memory")):
@@ -484,6 +491,8 @@ def render_html(report: dict) -> str:
                                    + _cites(l.get("ledger_refs", []), cites))
                 d = c["_decision"]
                 hr = " · high risk" if d["high_risk"] else ""
+                if c["blocked"]:
+                    hr += " · <b>Blocked (C09)</b>"
                 out.append(f"<tr><td>{_e(d['decision_id'])}</td><td>{_e(c['stage'])} / {_e(d['outcome'])}"
                            f"<div class='muted'>decided by {_e(d['decided_by'] or 'not recorded')}{hr}</div></td>"
                            f"<td>{weak}</td><td>{'<br>'.join(own) or '<span class=muted>no own flags</span>'}</td></tr>")
