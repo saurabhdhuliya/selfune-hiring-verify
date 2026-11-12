@@ -340,6 +340,9 @@ def build_report(root: Path = REPO_ROOT, today: date | None = None) -> dict:
             "human_questions": len(questions),
         },
         "job_level_issues": issues,
+        # Every flag shown in this run, as "object_ref|check". The outcome log accepts only these.
+        "flags": [{"flag_ref": f"{f['object_ref']}|{f['check']}", "object_ref": f["object_ref"], "check": f["check"],
+                   "verdict": f["verdict"]} for f in findings if f["verdict"] != "VERIFIED"],
         "questions": questions,
         "chains": chains,
         "job_and_tool_findings": non_decision,
@@ -401,13 +404,24 @@ def _flag(f: dict, cites: dict, title: str = "") -> str:
             f'{_cites(f["ledger_refs"], cites)}</div>')
 
 
-def render_html(report: dict) -> str:
+def _history(ref: str, history: dict | None) -> str:
+    """Last logged action for a flag_ref, or a dash."""
+    e = (history or {}).get(ref)
+    if not e:
+        return "<span class='muted'>–</span>"
+    when = e.get("outcome_date") or e.get("logged_at", "")[:10]
+    return f"{_e(e['action'])}<div class='muted'>{_e(e['decided_by_role'])} · {_e(when)}</div>"
+
+
+def render_html(report: dict, history: dict | None = None) -> str:
+    """history: flag_ref -> latest outcome-log entry. When given, flags get a 'Flag history' column."""
     cites = report["citations"]
     s = report["summary"]
+    hist_on = history is not None
     out = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
            f"<title>Process Verification Report</title><style>{_CSS}</style></head><body><main>",
            f"<h1>Hiring process verification</h1><div class='muted'>{_e(report['employer'])} · generated {_e(report['generated_on'])} · "
-           f"{s['chains']} decision chains</div>"]
+           f"{s['chains']} decision chains" + (f" · run {_e(report['run_id'])}" if report.get("run_id") else "") + "</div>"]
     issues = report["job_level_issues"]
     out.append(f"<h2>Job-level issues ({len(issues)})</h2><div class='muted'>Flags on requirements, selection method, "
                "tools and group counts. Each is reported once here, not repeated in every decision chain.</div><div class='cards'>")
@@ -415,12 +429,13 @@ def render_html(report: dict) -> str:
         if s["job_level_issues_by_verdict"].get(v):
             out.append(f"<div class='card'>{_badge(v)}<b>{s['job_level_issues_by_verdict'][v]}</b></div>")
     out.append("</div><div class='wrap'><table><tr><th>Job</th><th>Issue</th><th>Check</th><th>Verdict</th>"
-               "<th>Affects</th><th>Source</th></tr>")
+               "<th>Affects</th><th>Source</th>" + ("<th>Flag history</th>" if hist_on else "") + "</tr>")
     for i in issues:
+        hcell = f"<td>{_history(i['object_ref'] + '|' + i['check'], history)}</td>" if hist_on else ""
         out.append(f"<tr><td>{_e(', '.join(i['job_ids']))}</td><td>{_e(i['category'])}: {_e(i['object_ref'])}"
                    f"<div class='muted'>{_e(_short(i['message'], 18))}</div></td><td>{_e(i['check'])}</td>"
                    f"<td>{_badge(i['verdict'])}</td><td>affects {i['affects_decisions']} decision"
-                   f"{'s' if i['affects_decisions'] != 1 else ''}</td><td>{_cites(i['ledger_refs'], cites)}</td></tr>")
+                   f"{'s' if i['affects_decisions'] != 1 else ''}</td><td>{_cites(i['ledger_refs'], cites)}</td>{hcell}</tr>")
     out.append("</table></div><h2>Decision chains by verdict</h2><div class='muted'>From each decision's own evidence "
                "and decision links only (C06, C08, C09, C11, C15).</div><div class='cards'>")
     for v in ORDER:
@@ -478,7 +493,8 @@ def render_html(report: dict) -> str:
                 continue
             out.append(f"<details{' open' if v in ('ESCALATE', 'CONTRADICTED') else ''}><summary>{_badge(v)} "
                        f"{len(group)} decision{'s' if len(group) != 1 else ''}</summary><div class='wrap'><table>"
-                       "<tr><th>Decision</th><th>Stage / outcome</th><th>Weakest link</th><th>This decision's own links</th></tr>")
+                       "<tr><th>Decision</th><th>Stage / outcome</th><th>Weakest link</th><th>This decision's own links</th>"
+                       + ("<th>Flag history</th>" if hist_on else "") + "</tr>")
             for c in group:
                 links = {l["link_id"]: l for l in c["links"]}
                 wl = links.get(c["weakest_link"]) if c["weakest_link"] else None
@@ -493,9 +509,16 @@ def render_html(report: dict) -> str:
                 hr = " · high risk" if d["high_risk"] else ""
                 if c["blocked"]:
                     hr += " · <b>Blocked (C09)</b>"
+                hcell = ""
+                if hist_on:
+                    refs = [f"decision:{d['decision_id']}|{ck}" for lid in ("E1", "D1")
+                            for ck in links[lid].get("check_refs", []) if links[lid]["status"] != "VERIFIED"]
+                    logged = [r for r in refs if r in history]
+                    hcell = "<td>" + ("<br>".join(f"{_e(r.split('|')[1])}: {_history(r, history)}" for r in logged)
+                                      or _history("", history)) + "</td>"
                 out.append(f"<tr><td>{_e(d['decision_id'])}</td><td>{_e(c['stage'])} / {_e(d['outcome'])}"
                            f"<div class='muted'>decided by {_e(d['decided_by'] or 'not recorded')}{hr}</div></td>"
-                           f"<td>{weak}</td><td>{'<br>'.join(own) or '<span class=muted>no own flags</span>'}</td></tr>")
+                           f"<td>{weak}</td><td>{'<br>'.join(own) or '<span class=muted>no own flags</span>'}</td>{hcell}</tr>")
             out.append("</table></div></details>")
     out.append(f"<footer>{_e(FOOTER)}</footer></main></body></html>")
     return "\n".join(out)
