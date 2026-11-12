@@ -263,7 +263,7 @@ tools = [
 ]
 
 label("tool:T1:audit_age", "C10", True, "ESCALATE", "Audit 2025-09-15, over 1 year before use; tool weighted most -> in scope.", ["GT-0036", "GT-0038"])
-label("tool:T1:notice", "C10", True, "ESCALATE", "Notice 5 business days before first use; needs 10.", ["GT-0037"])
+label("tool:T1:notice", "C10", True, "ESCALATE", "Notice 4 business days (strictly between) before first use; needs 10.", ["GT-0037"])
 label("tool:T3:scope", "C10", True, "ESCALATE", "Employer says not in scope, but output overrides humans -> in scope; no audit.", ["GT-0038", "GT-0002", "GT-0036"])
 label("tool:T4:audit_age", "C10", False, "VERIFIED", "Audit 2026-03-01, within 1 year.", ["GT-0036"])
 label("tool:T4:notice", "C10", False, "VERIFIED", "Notice 13 business days before use.", ["GT-0037"])

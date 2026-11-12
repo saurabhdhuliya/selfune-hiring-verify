@@ -21,7 +21,7 @@
 {"label_id": "L021", "object_ref": "job:J3:selection_method", "check": "C04", "planted": true, "expected_verdict": "UNVERIFIED", "ledger_refs": ["GT-0033"], "note": "Holistic panel combination of valid methods."}
 {"label_id": "L022", "object_ref": "job:J2:selection_method", "check": "C04", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0006", "GT-0033"], "note": "Work sample + structured interview, mechanical weights."}
 {"label_id": "L023", "object_ref": "tool:T1:audit_age", "check": "C10", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0036", "GT-0038"], "note": "Audit 2025-09-15, over 1 year before use; tool weighted most -> in scope."}
-{"label_id": "L024", "object_ref": "tool:T1:notice", "check": "C10", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0037"], "note": "Notice 5 business days before first use; needs 10."}
+{"label_id": "L024", "object_ref": "tool:T1:notice", "check": "C10", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0037"], "note": "Notice 4 business days (strictly between) before first use; needs 10."}
 {"label_id": "L025", "object_ref": "tool:T3:scope", "check": "C10", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0038", "GT-0002", "GT-0036"], "note": "Employer says not in scope, but output overrides humans -> in scope; no audit."}
 {"label_id": "L026", "object_ref": "tool:T4:audit_age", "check": "C10", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0036"], "note": "Audit 2026-03-01, within 1 year."}
 {"label_id": "L027", "object_ref": "tool:T4:notice", "check": "C10", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0037"], "note": "Notice 13 business days before use."}
