@@ -37,6 +37,7 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 - 86 scored items: 41 planted, 42 clean, 3 NOT_CHECKED.
 - Every check from C01 to C15 has at least one planted case.
 - Release rule: every code check catches 100% of its planted cases, and false alarms stay under 10%.
+- Rule baselines are tuned on synthetic data; real-world accuracy is unmeasured.
 
 ## Quick start
 ```
