@@ -1,0 +1,127 @@
+{
+  "employer_id": "EMP-NORTHWIND-SYN",
+  "employer_name": "Northwind Synthetic Ltd (fictional)",
+  "jobs": [
+    {
+      "job_id": "J1",
+      "title": "Customer Support Specialist",
+      "description": "Handle inbound chat and email for a subscription product. Some customers are upset; agents de-escalate within policy.",
+      "jurisdiction": [
+        "NYC"
+      ],
+      "selection_method": {
+        "stages": [
+          "tool ranking (T1)",
+          "unstructured interview"
+        ],
+        "combine": "holistic",
+        "combine_note": "Hiring manager reviews the rank and interview impressions and decides overall."
+      },
+      "requirements": [
+        {
+          "req_id": "J1-R1",
+          "text": "Strong communication skills, because agents resolve escalated customer complaints."
+        },
+        {
+          "req_id": "J1-R2",
+          "text": "Resolves at least 85% of tier-1 tickets within 24 hours in a paid trial week, because response time drives renewals."
+        },
+        {
+          "req_id": "J1-R3",
+          "text": "Minimum 5 years of customer support experience."
+        },
+        {
+          "req_id": "J1-R4",
+          "text": "Excellent attitude and positive energy."
+        },
+        {
+          "req_id": "J1-R5",
+          "text": "Typing speed of 60 words per minute."
+        }
+      ]
+    },
+    {
+      "job_id": "J2",
+      "title": "Backend Engineer",
+      "description": "Build and run Python services for the billing platform. On-call one week in six.",
+      "jurisdiction": [
+        "EU"
+      ],
+      "selection_method": {
+        "stages": [
+          "tool screen (T5)",
+          "work sample",
+          "structured interview"
+        ],
+        "combine": "mechanical",
+        "combine_note": "Fixed weights set before screening: work sample 50%, structured interview 50%."
+      },
+      "requirements": [
+        {
+          "req_id": "J2-R1",
+          "text": "Strong Python skills, because the billing backend is Python."
+        },
+        {
+          "req_id": "J2-R2",
+          "text": "Ships and debugs production services, because the team owns uptime."
+        },
+        {
+          "req_id": "J2-R3",
+          "text": "3+ years of Go experience."
+        },
+        {
+          "req_id": "J2-R4",
+          "text": "Has contributed to open-source projects, because it shows code review experience."
+        },
+        {
+          "req_id": "J2-R5",
+          "text": "Team player with a great culture fit."
+        }
+      ]
+    },
+    {
+      "job_id": "J3",
+      "title": "Operations Analyst",
+      "description": "Inventory and cost reporting for warehouses. Offices in Bengaluru and Chicago.",
+      "jurisdiction": [
+        "IN",
+        "IL"
+      ],
+      "selection_method": {
+        "stages": [
+          "tool filter (T9)",
+          "job knowledge test",
+          "structured interview"
+        ],
+        "combine": "holistic",
+        "combine_note": "Panel discusses test and interview results and reaches a consensus."
+      },
+      "requirements": [
+        {
+          "req_id": "J3-R1",
+          "text": "Excellent attention to detail."
+        },
+        {
+          "req_id": "J3-R2",
+          "text": "Reconciles weekly inventory with under 1% variance in a 2-hour exercise, because stock errors cost margin."
+        },
+        {
+          "req_id": "J3-R3",
+          "text": "Minimum 8 years in operations."
+        },
+        {
+          "req_id": "J3-R4",
+          "text": "Advanced Excel certification (MO-201)."
+        },
+        {
+          "req_id": "J3-R5",
+          "text": "MBA from a top-20 school."
+        },
+        {
+          "req_id": "J3-R6",
+          "text": "Has used SQL to answer a business question, tested in the work sample, because reports pull from SQL."
+        }
+      ]
+    }
+  ]
+}

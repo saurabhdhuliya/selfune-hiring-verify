@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://selfune.com/schemas/role_memory.schema.json",
+  "title": "Selfune Role Memory",
+  "description": "Employer definitions of traits, stored once per role and reused. A human writes and locks each entry; the loop only reads it. Definitions describe observable job behaviour, never emotion or personality.",
+  "type": "object",
+  "required": ["employer_id", "roles"],
+  "additionalProperties": false,
+  "properties": {
+    "employer_id": {"type": "string"},
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role_id", "role_need", "traits"],
+        "additionalProperties": false,
+        "properties": {
+          "role_id": {"type": "string"},
+          "role_need": {"type": "string", "description": "The business problem this role exists to solve, in the employer's words."},
+          "role_need_defined_by": {"type": "string"},
+          "traits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["trait_id", "terms", "definition", "observable_evidence", "measured_by", "why_it_predicts", "defined_by", "defined_on", "review_by", "status"],
+              "additionalProperties": false,
+              "properties": {
+                "trait_id": {"type": "string", "pattern": "^TR-[A-Z0-9-]+$"},
+                "terms": {"type": "array", "minItems": 1, "items": {"type": "string"}, "description": "Requirement phrases that map to this trait, lower case."},
+                "definition": {"type": "string"},
+                "observable_evidence": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                "measured_by": {"type": "string", "description": "Selection method used to observe it."},
+                "why_it_predicts": {"type": "string", "description": "Link from the trait to the role need."},
+                "ledger_refs": {"type": "array", "items": {"type": "string"}},
+                "defined_by": {"type": "string", "description": "Human role, not a name."},
+                "defined_on": {"type": "string", "format": "date"},
+                "review_by": {"type": "string", "format": "date"},
+                "status": {"enum": ["ACTIVE", "STALE", "RETIRED"]},
+                "version": {"type": "integer", "minimum": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

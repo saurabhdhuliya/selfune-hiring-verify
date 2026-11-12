@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://selfune.com/schemas/decision_chain.schema.json",
+  "title": "Selfune Decision Chain",
+  "description": "One hiring decision as a chain: role need -> requirement -> evidence -> decision. Every link carries its own verdict. The chain is only as strong as its weakest link. It describes the PROCESS, never the person.",
+  "type": "object",
+  "required": ["chain_id", "job_id", "candidate_ref", "stage", "links", "chain_status", "weakest_link"],
+  "additionalProperties": false,
+  "properties": {
+    "chain_id": {"type": "string", "pattern": "^CH-[A-Z0-9-]+$"},
+    "job_id": {"type": "string"},
+    "candidate_ref": {"type": "string", "pattern": "^CAND-[0-9]{4}$", "description": "Anonymous ID only. Never a name."},
+    "stage": {"enum": ["screen", "assessment", "interview", "offer"]},
+    "links": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"$ref": "#/$defs/link"}
+    },
+    "chain_status": {"$ref": "#/$defs/verdict"},
+    "weakest_link": {"type": ["string", "null"], "description": "link_id of the first link that is not VERIFIED, or null when all are VERIFIED."},
+    "human_questions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/human_question"}
+    },
+    "blocked": {"type": "boolean", "description": "True when C9 (emotion or personality inference) fired anywhere in the chain. A blocked chain is not evaluated further."}
+  },
+  "$defs": {
+    "verdict": {"enum": ["VERIFIED", "UNVERIFIED", "CONTRADICTED", "ESCALATE", "NOT_CHECKED", "WARN"]},
+    "route": {"enum": ["code", "source", "human", "role_memory", "avl"]},
+    "link": {
+      "type": "object",
+      "required": ["link_id", "type", "statement", "status", "route"],
+      "additionalProperties": false,
+      "properties": {
+        "link_id": {"type": "string"},
+        "type": {"enum": ["role_need", "requirement", "evidence", "decision"]},
+        "depends_on": {"type": "array", "items": {"type": "string"}, "description": "link_ids this link rests on."},
+        "statement": {"type": "string", "description": "One-sentence claim."},
+        "status": {"$ref": "#/$defs/verdict"},
+        "route": {"$ref": "#/$defs/route"},
+        "observed": {"type": ["string", "null"], "description": "What is actually in the data (evidence links)."},
+        "inferred": {"type": ["string", "null"], "description": "What was concluded from it (evidence links)."},
+        "observed_confidence": {"enum": ["High", "Medium", "Low", null], "description": "Is the observed fact really in the data? (from ERD: Behavior Confidence)"},
+        "inference_confidence": {"enum": ["High", "Medium", "Low", null], "description": "Does the fact support the conclusion? (from ERD: Explanation Confidence)"},
+        "alternative_explanations": {"type": "array", "items": {"type": "string"}, "description": "Other readings of the same fact (from ERD)."},
+        "fields_missing": {"type": "array", "items": {"type": "string"}},
+        "trait_ref": {"type": ["string", "null"], "description": "Role-memory trait_id used to verify a requirement."},
+        "ledger_refs": {"type": "array", "items": {"type": "string", "pattern": "^GT-[0-9]{4}$"}},
+        "check_refs": {"type": "array", "items": {"type": "string", "pattern": "^C(0[1-9]|1[0-5])$"}},
+        "note": {"type": "string"}
+      }
+    },
+    "human_question": {
+      "type": "object",
+      "required": ["link_id", "ask", "why"],
+      "additionalProperties": false,
+      "properties": {
+        "link_id": {"type": "string"},
+        "ask": {"type": "string", "description": "Under 25 words, specific to the employer's data."},
+        "why": {"type": "string", "description": "What stays unverified without the answer."},
+        "do_not_ask": {"type": "string", "description": "Leading or loaded phrasings to avoid (from ERD: What NOT to Ask)."},
+        "store_answer_in": {"enum": ["role_memory", "decision_record"]}
+      }
+    }
+  }
+}

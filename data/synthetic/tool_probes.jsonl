@@ -1,0 +1,16 @@
+{"probe_id": "P01A", "pair_id": "P01", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-01", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "advance"}
+{"probe_id": "P01B", "pair_id": "P01", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-01", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "reject"}
+{"probe_id": "P02A", "pair_id": "P02", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-02", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "advance"}
+{"probe_id": "P02B", "pair_id": "P02", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-02", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "reject"}
+{"probe_id": "P03A", "pair_id": "P03", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-03", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "score 78"}
+{"probe_id": "P03B", "pair_id": "P03", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-03", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "score 61"}
+{"probe_id": "P04A", "pair_id": "P04", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-04", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "advance"}
+{"probe_id": "P04B", "pair_id": "P04", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-04", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "reject"}
+{"probe_id": "P05A", "pair_id": "P05", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-05", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "advance"}
+{"probe_id": "P05B", "pair_id": "P05", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-05", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "advance"}
+{"probe_id": "P06A", "pair_id": "P06", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-06", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "reject"}
+{"probe_id": "P06B", "pair_id": "P06", "tool_id": "T1", "job_id": "J1", "profile_id": "PROFILE-06", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "reject"}
+{"probe_id": "P07A", "pair_id": "P07", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-07", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "score 74"}
+{"probe_id": "P07B", "pair_id": "P07", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-07", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "score 74"}
+{"probe_id": "P08A", "pair_id": "P08", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-08", "identical_except": "name", "name_marker": "NAME_SET_A", "tool_output": "advance"}
+{"probe_id": "P08B", "pair_id": "P08", "tool_id": "T5", "job_id": "J2", "profile_id": "PROFILE-08", "identical_except": "name", "name_marker": "NAME_SET_B", "tool_output": "advance"}

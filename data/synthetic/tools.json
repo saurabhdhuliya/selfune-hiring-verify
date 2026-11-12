@@ -1,0 +1,204 @@
+[
+  {
+    "tool_id": "T1",
+    "job_ids": [
+      "J1"
+    ],
+    "name": "ScreenRank",
+    "vendor": "Acme Talent AI (fictional)",
+    "what_it_outputs": "rank 1-100",
+    "used_for": "rank",
+    "decision_mode": "weighted_most",
+    "employer_scope_claim": "in scope",
+    "last_bias_audit_date": "2025-09-15",
+    "notice_sent_date": "2026-10-26",
+    "first_use_date": "2026-11-02",
+    "infers_emotion": false,
+    "vendor_claims": [
+      "Predicts top performers with 95% accuracy."
+    ]
+  },
+  {
+    "tool_id": "T2",
+    "job_ids": [
+      "J1"
+    ],
+    "name": "SchedBot",
+    "vendor": "Calendly-like Co (fictional)",
+    "what_it_outputs": "interview time slots",
+    "used_for": "interview",
+    "decision_mode": "none",
+    "employer_scope_claim": "not in scope",
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T3",
+    "job_ids": [
+      "J1"
+    ],
+    "name": "QuickFilter",
+    "vendor": "FastHire (fictional)",
+    "what_it_outputs": "pass/fail",
+    "used_for": "screen",
+    "decision_mode": "overrides_human",
+    "employer_scope_claim": "not in scope",
+    "last_bias_audit_date": null,
+    "notice_sent_date": null,
+    "first_use_date": "2026-08-01",
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T4",
+    "job_ids": [
+      "J1"
+    ],
+    "name": "SkillCheck",
+    "vendor": "TestWorks (fictional)",
+    "what_it_outputs": "typing and ticket-triage score",
+    "used_for": "assess",
+    "decision_mode": "weighted_most",
+    "employer_scope_claim": "in scope",
+    "last_bias_audit_date": "2026-03-01",
+    "notice_sent_date": "2026-09-01",
+    "first_use_date": "2026-09-20",
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T13",
+    "job_ids": [
+      "J1"
+    ],
+    "name": "ChatScreen",
+    "vendor": "TalkHire (fictional)",
+    "what_it_outputs": "screen score",
+    "used_for": "screen",
+    "decision_mode": "weighted_most",
+    "employer_scope_claim": "in scope",
+    "notice_sent_date": "2026-09-01",
+    "first_use_date": "2026-09-25",
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T5",
+    "job_ids": [
+      "J2"
+    ],
+    "name": "CodeSift",
+    "vendor": "DevGate (fictional)",
+    "what_it_outputs": "score 0-100, auto-reject below 70",
+    "used_for": "screen",
+    "decision_mode": "alone",
+    "human_review": false,
+    "lawful_basis": null,
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T6",
+    "job_ids": [
+      "J2"
+    ],
+    "name": "InterviewLens",
+    "vendor": "FaceSignal (fictional)",
+    "what_it_outputs": "enthusiasm and stress scores from facial expressions and voice tone",
+    "used_for": "interview",
+    "decision_mode": "advisory",
+    "human_review": true,
+    "lawful_basis": "consent",
+    "infers_emotion": true,
+    "vendor_claims": [
+      "Measures candidate enthusiasm and stress from video."
+    ]
+  },
+  {
+    "tool_id": "T7",
+    "job_ids": [
+      "J2"
+    ],
+    "name": "CalendarAI",
+    "vendor": "SlotCo (fictional)",
+    "what_it_outputs": "time slots",
+    "used_for": "interview",
+    "decision_mode": "none",
+    "human_review": true,
+    "lawful_basis": "legitimate interest",
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T8",
+    "job_ids": [
+      "J2"
+    ],
+    "name": "TestGrader",
+    "vendor": "GradeIt (fictional)",
+    "what_it_outputs": "job knowledge test score",
+    "used_for": "assess",
+    "decision_mode": "advisory",
+    "human_review": true,
+    "lawful_basis": "contract necessity; human review and contest route offered",
+    "infers_emotion": false,
+    "vendor_claims": [
+      "Assesses critical thinking."
+    ]
+  },
+  {
+    "tool_id": "T9",
+    "job_ids": [
+      "J3"
+    ],
+    "name": "AgeSmart Filter",
+    "vendor": "QuickOps HR (fictional)",
+    "what_it_outputs": "pass/reject",
+    "used_for": "screen",
+    "decision_mode": "alone",
+    "rules": [
+      "auto-reject if graduation_year < 1995"
+    ],
+    "il_notice_sent": null,
+    "il_disparate_effect_review": null,
+    "consent_notice": null,
+    "purpose_stated": "screening",
+    "retention_days": "indefinite",
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T10",
+    "job_ids": [
+      "J3"
+    ],
+    "name": "SheetTest",
+    "vendor": "Gridly (fictional)",
+    "what_it_outputs": "Excel test score",
+    "used_for": "assess",
+    "decision_mode": "advisory",
+    "il_notice_sent": "2026-08-01",
+    "il_disparate_effect_review": "2026-07-15: aggregated selection rates reviewed, ratio 0.91",
+    "consent_notice": "2026-08-01",
+    "purpose_stated": "assess spreadsheet skill for this role only",
+    "retention_days": 180,
+    "infers_emotion": false,
+    "vendor_claims": []
+  },
+  {
+    "tool_id": "T11",
+    "job_ids": [
+      "J3"
+    ],
+    "name": "VideoScreen",
+    "vendor": "ClipHire (fictional)",
+    "what_it_outputs": "video interview summary",
+    "used_for": "interview",
+    "decision_mode": "advisory",
+    "infers_emotion": "unknown",
+    "consent_notice": "2026-08-01",
+    "purpose_stated": "interview summary",
+    "retention_days": 365,
+    "vendor_claims": []
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "J1": {
+    "sex_self_reported": {
+      "women": {
+        "applied": 40,
+        "selected": 6
+      },
+      "men": {
+        "applied": 40,
+        "selected": 14
+      }
+    },
+    "age_band": {
+      "under_40": {
+        "applied": 56,
+        "selected": 17
+      },
+      "40_plus": {
+        "applied": 24,
+        "selected": 3
+      }
+    }
+  },
+  "J2": {
+    "sex_self_reported": {
+      "women": {
+        "applied": 35,
+        "selected": 8
+      },
+      "men": {
+        "applied": 35,
+        "selected": 9
+      }
+    },
+    "age_band": {
+      "under_40": {
+        "applied": 50,
+        "selected": 12
+      },
+      "40_plus": {
+        "applied": 20,
+        "selected": 5
+      }
+    }
+  }
+}

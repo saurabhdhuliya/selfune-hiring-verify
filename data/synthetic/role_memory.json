@@ -1,0 +1,89 @@
+{
+  "employer_id": "EMP-NORTHWIND-SYN",
+  "roles": [
+    {
+      "role_id": "J1",
+      "role_need": "Keep paying customers by resolving their problems quickly.",
+      "role_need_defined_by": "Head of Support",
+      "traits": []
+    },
+    {
+      "role_id": "J2",
+      "role_need": "Keep the billing platform correct and available.",
+      "role_need_defined_by": "Engineering Manager, Billing",
+      "traits": [
+        {
+          "trait_id": "TR-J2-PY",
+          "terms": [
+            "strong python",
+            "python skills",
+            "strong python skills"
+          ],
+          "definition": "Writes and tests a small Python service change that passes review without major rework.",
+          "observable_evidence": [
+            "work sample passes 8 of 10 hidden tests",
+            "structured interview Q3 score of 3 or more out of 5"
+          ],
+          "measured_by": "work sample + structured interview Q3",
+          "why_it_predicts": "Most tickets are Python changes to billing services.",
+          "ledger_refs": [
+            "GT-0006"
+          ],
+          "defined_by": "Engineering Manager, Billing",
+          "defined_on": "2026-09-01",
+          "review_by": "2027-09-01",
+          "status": "ACTIVE",
+          "version": 1
+        },
+        {
+          "trait_id": "TR-J2-PROD",
+          "terms": [
+            "ships and debugs production services",
+            "production debugging"
+          ],
+          "definition": "Finds the cause of a seeded production bug from logs within 45 minutes.",
+          "observable_evidence": [
+            "debugging exercise: root cause named and fix proposed in 45 minutes"
+          ],
+          "measured_by": "work sample part B",
+          "why_it_predicts": "The team is on call and owns uptime.",
+          "ledger_refs": [
+            "GT-0006"
+          ],
+          "defined_by": "Engineering Manager, Billing",
+          "defined_on": "2026-09-01",
+          "review_by": "2027-09-01",
+          "status": "ACTIVE",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "role_id": "J3",
+      "role_need": "Cut stock and cost errors in warehouse reporting.",
+      "role_need_defined_by": "Operations Director",
+      "traits": [
+        {
+          "trait_id": "TR-J3-DETAIL",
+          "terms": [
+            "attention to detail"
+          ],
+          "definition": "Finds seeded errors in a reconciliation sheet.",
+          "observable_evidence": [
+            "finds 4 of 5 seeded errors in exercise"
+          ],
+          "measured_by": "job knowledge test part 2",
+          "why_it_predicts": "Errors in weekly reports drive stock losses.",
+          "ledger_refs": [
+            "GT-0006"
+          ],
+          "defined_by": "Operations Director",
+          "defined_on": "2025-06-01",
+          "review_by": "2026-06-01",
+          "status": "ACTIVE",
+          "version": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+[
+  {
+    "chain_id": "CH-EX-1",
+    "job_id": "J2",
+    "candidate_ref": "CAND-0087",
+    "stage": "screen",
+    "links": [
+      {
+        "link_id": "N1",
+        "type": "role_need",
+        "statement": "Keep the billing platform correct and available.",
+        "status": "VERIFIED",
+        "route": "role_memory",
+        "note": "Defined by Engineering Manager, Billing."
+      },
+      {
+        "link_id": "R1",
+        "type": "requirement",
+        "statement": "Strong Python skills, because the billing backend is Python.",
+        "status": "VERIFIED",
+        "route": "role_memory",
+        "depends_on": [
+          "N1"
+        ],
+        "trait_ref": "TR-J2-PY",
+        "check_refs": [
+          "C01"
+        ],
+        "note": "Matched term 'strong python skills'. Definition: Writes and tests a small Python service change that passes review without major rework."
+      },
+      {
+        "link_id": "E1",
+        "type": "evidence",
+        "statement": "Work sample passes 9 of 10 hidden tests.",
+        "status": "VERIFIED",
+        "route": "code",
+        "depends_on": [
+          "R1"
+        ],
+        "observed": "work_sample_score present; 9/10 hidden tests",
+        "inferred": "Meets TR-J2-PY observable threshold (8/10)",
+        "observed_confidence": "High",
+        "inference_confidence": "High",
+        "ledger_refs": [
+          "GT-0006"
+        ]
+      },
+      {
+        "link_id": "D1",
+        "type": "decision",
+        "statement": "Advanced: structured interview score above pre-set threshold.",
+        "status": "VERIFIED",
+        "route": "code",
+        "depends_on": [
+          "E1"
+        ]
+      }
+    ],
+    "chain_status": "VERIFIED",
+    "weakest_link": null,
+    "human_questions": [],
+    "blocked": false
+  },
+  {
+    "chain_id": "CH-EX-2",
+    "job_id": "J1",
+    "candidate_ref": "CAND-0001",
+    "stage": "screen",
+    "links": [
+      {
+        "link_id": "N1",
+        "type": "role_need",
+        "statement": "Keep paying customers by resolving their problems quickly.",
+        "status": "VERIFIED",
+        "route": "role_memory"
+      },
+      {
+        "link_id": "R1",
+        "type": "requirement",
+        "statement": "Strong communication skills, because agents resolve escalated customer complaints.",
+        "status": "UNVERIFIED",
+        "route": "human",
+        "depends_on": [
+          "N1"
+        ],
+        "ledger_refs": [
+          "GT-0019",
+          "GT-0021"
+        ],
+        "check_refs": [
+          "C01"
+        ],
+        "note": "'Strong' has no definition in role memory."
+      },
+      {
+        "link_id": "E1",
+        "type": "evidence",
+        "statement": "Candidate is not reliable.",
+        "status": "UNVERIFIED",
+        "route": "code",
+        "depends_on": [
+          "R1"
+        ],
+        "observed": "references field is empty",
+        "inferred": "candidate is not reliable",
+        "observed_confidence": "High",
+        "inference_confidence": "Low",
+        "alternative_explanations": [
+          "form did not ask for references",
+          "referees not yet contacted",
+          "candidate keeps references until a later stage"
+        ],
+        "fields_missing": [
+          "references"
+        ],
+        "check_refs": [
+          "C06"
+        ]
+      },
+      {
+        "link_id": "D1",
+        "type": "decision",
+        "statement": "No references provided, so likely not reliable.",
+        "status": "UNVERIFIED",
+        "route": "avl",
+        "depends_on": [
+          "E1"
+        ],
+        "check_refs": [
+          "C06"
+        ]
+      }
+    ],
+    "chain_status": "UNVERIFIED",
+    "weakest_link": "R1",
+    "human_questions": [
+      {
+        "link_id": "R1",
+        "ask": "For Customer Support Specialist, what observable result shows \"strong communication skills\", and how does it help the role succeed?",
+        "why": "Without a definition the requirement cannot be checked, for this or any later candidate.",
+        "do_not_ask": "Do you think this candidate communicates well?",
+        "store_answer_in": "role_memory"
+      },
+      {
+        "link_id": "E1",
+        "ask": "Did the application form ask for references at this stage?",
+        "why": "If it did not, the empty field says nothing about the candidate.",
+        "do_not_ask": "Was the candidate hiding something?",
+        "store_answer_in": "decision_record"
+      }
+    ],
+    "blocked": false
+  },
+  {
+    "chain_id": "CH-EX-3",
+    "job_id": "J2",
+    "candidate_ref": "CAND-0090",
+    "stage": "interview",
+    "links": [
+      {
+        "link_id": "N1",
+        "type": "role_need",
+        "statement": "Keep the billing platform correct and available.",
+        "status": "VERIFIED",
+        "route": "role_memory"
+      },
+      {
+        "link_id": "R1",
+        "type": "requirement",
+        "statement": "Ships and debugs production services, because the team owns uptime.",
+        "status": "VERIFIED",
+        "route": "role_memory",
+        "depends_on": [
+          "N1"
+        ],
+        "trait_ref": "TR-J2-PROD"
+      },
+      {
+        "link_id": "E1",
+        "type": "evidence",
+        "statement": "Candidate video analysis - dominant emotion Anxiety, intensity 6/10; readiness: YELLOW; personality pattern: Shutdown / Blocking Responses.",
+        "status": "ESCALATE",
+        "route": "code",
+        "depends_on": [
+          "R1"
+        ],
+        "ledger_refs": [
+          "GT-0008"
+        ],
+        "check_refs": [
+          "C09"
+        ],
+        "note": "Tool output infers emotion/personality. Blocked; not evaluated, not shown to decision maker."
+      },
+      {
+        "link_id": "D1",
+        "type": "decision",
+        "statement": "Pending interview outcome.",
+        "status": "NOT_CHECKED",
+        "route": "human",
+        "depends_on": [
+          "E1"
+        ]
+      }
+    ],
+    "chain_status": "ESCALATE",
+    "weakest_link": "E1",
+    "human_questions": [
+      {
+        "link_id": "E1",
+        "ask": "Can InterviewLens emotion and stress scores be switched off for all candidates?",
+        "why": "The EU AI Act bans emotion inference in hiring; the output cannot be used.",
+        "store_answer_in": "decision_record"
+      }
+    ],
+    "blocked": true
+  }
+]
