@@ -116,9 +116,8 @@ def test_footer(page):
     assert "Verifies process, not people. Not legal advice." in page
 
 
-def test_ledger_warning_for_pending_row(report):
-    ids = {w["id"] for w in report["ledger_warnings"]}
-    assert "GT-0009" in ids
+def test_no_ledger_warnings_after_relock(report):
+    assert report["ledger_warnings"] == []
 
 
 def test_missing_role_need_is_not_checked(synthetic_root):
@@ -267,12 +266,19 @@ def test_every_citation_shows_display_label_before_url(report, page):
 
 
 # ---------------------------------------------------------------- fix 4: all ledger warnings
-def test_ledger_warnings_include_uncited_rows(report, page):
+def test_ledger_warnings_include_uncited_rows(report, synthetic_root):
     cited = {r for f in report["job_and_tool_findings"] for r in f["ledger_refs"]}
-    ids = {w["id"] for w in report["ledger_warnings"]}
-    assert {"GT-0009", "GT-0025"} <= ids
-    assert "GT-0025" not in cited                     # listed although no finding cites it
-    assert "GT-0025 · " in page
+    assert "GT-0025" not in cited
+    root = synthetic_root()
+    path = root / "ledger/hiring.jsonl"
+    rows = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l]
+    for r in rows:
+        if r["id"] == "GT-0025":
+            r["user_decision"] = "PENDING_RELOCK"
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    r2 = rep.build_report(root, today=TODAY)
+    assert "GT-0025" in {w["id"] for w in r2["ledger_warnings"]}   # listed although no finding cites it
+    assert "GT-0025 · " in rep.render_html(r2)
 
 
 def test_ledger_warnings_cover_expired_and_contested(synthetic_root):
@@ -284,11 +290,13 @@ def test_ledger_warnings_cover_expired_and_contested(synthetic_root):
             r["recheck_by"] = "2026-01-01"
         if r["id"] == "GT-0041":
             r["status"], r["use_as"] = "CONTESTED", "warn_only"
+        if r["id"] == "GT-0042":
+            r["user_decision"] = "PENDING_RELOCK"
     path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
     w = {x["id"]: x["warnings"] for x in rep.build_report(root, today=TODAY)["ledger_warnings"]}
     assert any("expired on 2026-01-01" in s for s in w["GT-0040"])
     assert any("contested" in s for s in w["GT-0041"])
-    assert any("PENDING_RELOCK" in s for s in w["GT-0009"])
+    assert any("PENDING_RELOCK" in s for s in w["GT-0042"])
 
 
 def test_report_code_never_references_labels():

@@ -32,8 +32,9 @@ led = L.load("ledger/hiring.jsonl")
 ok(len(led) == 50, "ledger has 50 rows")
 ok(all("recheck_by" in r and "use_as" in r for r in led.values()), "every row has recheck_by and use_as")
 ok(not [r for r in led.values() if r["status"] == "CONTESTED"], "no CONTESTED rows left after re-check")
-ok(led["GT-0009"]["user_decision"] == "PENDING_RELOCK" and led["GT-0025"]["user_decision"] == "PENDING_RELOCK",
-   "re-checked rows wait for a human re-lock")
+reviewed = ("GT-0008", "GT-0009", "GT-0023", "GT-0025", "GT-0035")
+ok(all(led[i]["user_decision"] == "LOCKED" and "review, 2026-11-12" in led[i]["locked_by"] for i in reviewed),
+   "re-checked rows re-locked by human review (2026-11-12)")
 ok(all(r["use_as"] != "proof" for r in led.values() if r["status"] in ("VENDOR_CLAIM", "OWN_DATA")),
    "VENDOR_CLAIM and OWN_DATA rows are never proof")
 expired = [r["id"] for r in led.values() if date.fromisoformat(r["recheck_by"]) < TODAY]

@@ -25,3 +25,7 @@ Code follow-ups:
 - Hard rule 7 now softens only hard fails (ESCALATE, CONTRADICTED → WARN) on pending or contested rows. UNVERIFIED stays: it asks a human, it doesn't fail anything.
 - C05 message reframed as a statistical flag; the four-fifths rule is a screening heuristic whose federal status is changing.
 - C09 cites the EU AI Act ban (GT-0008) only for video, voice, face or behavioural input. Text-only inference is still ESCALATE, as a Selfune hard rule 1 policy block. C09 verdicts are not softened, because they rest on hard rule 1, not on the ledger row.
+
+## 2026-11-12: re-locked after review
+- GT-0008, GT-0009, GT-0023, GT-0025 and GT-0035 reviewed by Saurabh Dhuliya and re-locked: `user_decision` LOCKED, `locked_by` "Saurabh Dhuliya (review, 2026-11-12)", `lock_note` "Re-locked after re-check and adversary check." Claim, status and caveats unchanged.
+- C13 now follows the normal rules: warn-only only while a row is CONTESTED (or pending, under hard rule 7). With GT-0009 locked, PS01 (2 August 2026) is CONTRADICTED and PS02 (2 December 2027) is VERIFIED; labels L082 and L083 updated to match.

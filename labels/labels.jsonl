@@ -79,8 +79,8 @@
 {"label_id": "L079", "object_ref": "ai_text:AT06", "check": "C09", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0008"], "note": "Emotion word describes the task, not the candidate."}
 {"label_id": "L080", "object_ref": "ai_text:AT07", "check": "C09", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0008"], "note": "Behaviour-only note."}
 {"label_id": "L081", "object_ref": "ai_text:AT08", "check": "C09", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0008"], "note": "'Calm' defined as an observable task result."}
-{"label_id": "L082", "object_ref": "policy:PS01", "check": "C13", "planted": true, "expected_verdict": "WARN", "ledger_refs": ["GT-0009"], "note": "Date superseded by GT-0009 re-check; warn only, row pending re-lock."}
-{"label_id": "L083", "object_ref": "policy:PS02", "check": "C13", "planted": false, "expected_verdict": "WARN", "ledger_refs": ["GT-0009"], "note": "Consistent with GT-0009, but row is pending re-lock: still warn-only."}
+{"label_id": "L082", "object_ref": "policy:PS01", "check": "C13", "planted": true, "expected_verdict": "CONTRADICTED", "ledger_refs": ["GT-0009"], "note": "States 2 August 2026; locked GT-0009 says 2 December 2027."}
+{"label_id": "L083", "object_ref": "policy:PS02", "check": "C13", "planted": false, "expected_verdict": "VERIFIED", "ledger_refs": ["GT-0009"], "note": "Matches locked GT-0009 (2 December 2027)."}
 {"label_id": "L084", "object_ref": "ai_text:AT09", "check": "C09", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0008"], "note": "ERD-style emotion/personality inference about a candidate: block."}
 {"label_id": "L085", "object_ref": "ai_text:AT10", "check": "C09", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0008"], "note": "ERD-style emotion/personality inference about a candidate: block."}
 {"label_id": "L086", "object_ref": "ai_text:AT11", "check": "C09", "planted": true, "expected_verdict": "ESCALATE", "ledger_refs": ["GT-0008"], "note": "ERD-style emotion/personality inference about a candidate: block."}

@@ -8,12 +8,20 @@ ROWS = ledger.load(str(ROOT / "ledger/hiring.jsonl"))
 CHANGED = ("GT-0023", "GT-0008", "GT-0035")
 
 
-def test_changed_rows_wait_for_relock_with_history():
+def test_changed_rows_have_history_and_adversary_fields():
     for rid in CHANGED:
         r = ROWS[rid]
-        assert r["user_decision"] == "PENDING_RELOCK"
         assert r["claim_history"]
         assert r["adversary_date"] == "2026-11-12" and r["adversary_check"] in ("FAILED", "INCONCLUSIVE")
+
+
+def test_reviewed_rows_relocked():
+    for rid in ("GT-0008", "GT-0009", "GT-0023", "GT-0025", "GT-0035"):
+        r = ROWS[rid]
+        assert r["user_decision"] == "LOCKED"
+        assert r["locked_by"] == "Saurabh Dhuliya (review, 2026-11-12)"
+        assert r["lock_note"] == "Re-locked after re-check and adversary check."
+    assert ROWS["GT-0009"]["status"] == ROWS["GT-0025"]["status"] == "VERIFIED_SECONDARY"
 
 
 def test_gt0023_decision():
@@ -40,7 +48,8 @@ def test_gt0035_caveat_only():
 
 
 def test_soften_only_hard_fails():
-    src = Sources(ROOT, ["GT-0023"])           # pending re-lock
+    src = Sources(ROOT, ["GT-0023"])
+    src.rows["GT-0023"] = {**src.rows["GT-0023"], "user_decision": "PENDING_RELOCK"}
     assert src.soften("UNVERIFIED", ["GT-0023"]) == "UNVERIFIED"
     assert src.soften("ESCALATE", ["GT-0023"]) == "WARN"
     assert src.soften("CONTRADICTED", ["GT-0023"]) == "WARN"

@@ -467,13 +467,13 @@ label("ai_text:AT06", "C09", False, "VERIFIED", "Emotion word describes the task
 label("ai_text:AT07", "C09", False, "VERIFIED", "Behaviour-only note.", ["GT-0008"])
 label("ai_text:AT08", "C09", False, "VERIFIED", "'Calm' defined as an observable task result.", ["GT-0008"])
 
-# EU / Colorado timing statements (C13, warn only)
+# EU / Colorado timing statements (C13; warn only while the row is CONTESTED)
 policy_statements = [
     {"stmt_id": "PS01", "job_id": "J2", "text": "EU AI Act high-risk duties apply to our screening tool from 2 August 2026."},
     {"stmt_id": "PS02", "job_id": "J2", "text": "EU high-risk duties for recruitment tools are scheduled for 2 December 2027 under Regulation 2026/1744."},
 ]
-label("policy:PS01", "C13", True, "WARN", "Date superseded by GT-0009 re-check; warn only, row pending re-lock.", ["GT-0009"])
-label("policy:PS02", "C13", False, "WARN", "Consistent with GT-0009, but row is pending re-lock: still warn-only.", ["GT-0009"])
+label("policy:PS01", "C13", True, "CONTRADICTED", "States 2 August 2026; locked GT-0009 says 2 December 2027.", ["GT-0009"])
+label("policy:PS02", "C13", False, "VERIFIED", "Matches locked GT-0009 (2 December 2027).", ["GT-0009"])
 
 
 # ---------------------------------------------------------------- ERD-derived C9 inputs

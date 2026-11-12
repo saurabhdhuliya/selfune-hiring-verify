@@ -1,8 +1,9 @@
-"""C13: dates in policy statements about the EU AI Act high-risk duties or the Colorado AI law. Warn only.
+"""C13: dates in policy statements about the EU AI Act high-risk duties or the Colorado AI law.
 
 Reads data/synthetic/company.json, policy_statements.jsonl and ledger/hiring.jsonl. Never reads labels/.
-The rows it relies on (GT-0009, GT-0025) are re-checked and wait for a human re-lock, so this check
-never fails (hard rule 7).
+- Row CONTESTED (or warn_only): every finding is WARN.
+- Otherwise: the statement's date matches the ledger date -> VERIFIED; differs -> CONTRADICTED;
+  no date -> UNVERIFIED. A pending row turns CONTRADICTED into WARN (hard rule 7).
 """
 from __future__ import annotations
 
@@ -45,15 +46,20 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
                 ledger_note = f"The ledger date for {topic} is {ledger_date} ({ref})."
             stated = _DATE.findall(text)
             if not stated:
-                compare = "The statement gives no date to compare."
+                verdict, compare = "UNVERIFIED", "The statement gives no date to compare: ask which date it relies on."
             elif ledger_date in stated:
-                compare = f"The statement's date ({', '.join(stated)}) matches the ledger date."
+                verdict, compare = "VERIFIED", f"The statement's date ({', '.join(stated)}) matches the ledger date."
             else:
-                compare = f"The statement's date ({', '.join(stated)}) differs from the ledger date."
-            status = (f"{ref} is {row['user_decision']}: it awaits a human re-lock, so this is a warning only."
-                      if row["user_decision"] != "LOCKED" else
-                      f"{ref} is locked; timing checks are still warning only.")
-            msg = (f"Timing warning, {topic}: {LEGAL}. {ledger_note} {compare} {status}"
-                   f"{src.cite([ref])}")
-            findings.append(finding(CHECK_ID, f"policy:{s['stmt_id']}", "WARN", [ref], msg))
+                verdict, compare = "CONTRADICTED", f"The statement's date ({', '.join(stated)}) differs from the ledger date."
+            contested = row.get("status") == "CONTESTED" or row.get("use_as") == "warn_only"
+            if contested:
+                verdict, status = "WARN", f"{ref} is CONTESTED: warning only."
+            else:
+                softened = src.soften(verdict, [ref])
+                status = (f"{ref} is {row['user_decision']}: it awaits a human re-lock, so this is a warning only."
+                          if softened != verdict else f"{ref} is {row['user_decision']}.")
+                verdict = softened
+            head = "Timing check" if verdict == "VERIFIED" else "Timing flag"
+            msg = f"{head}, {topic}: {LEGAL}. {ledger_note} {compare} {status}{src.cite([ref])}"
+            findings.append(finding(CHECK_ID, f"policy:{s['stmt_id']}", verdict, [ref], msg))
     return findings

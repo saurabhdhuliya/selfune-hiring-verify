@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from conftest import ROOT, by_ref
 
@@ -89,10 +91,18 @@ def test_biometric_input_detection(text, bio):
     assert c09.biometric_input(text) is bio
 
 
-def test_pending_gt0008_does_not_soften_block():
+def test_pending_gt0008_does_not_soften_block(synthetic_root):
     """C09 rests on hard rule 1 (policy); a pending GT-0008 shows as a warning, not a softer verdict."""
-    f = by_ref(c09.run(ROOT))["tool:T6"]
+    root = synthetic_root()
+    path = root / "ledger/hiring.jsonl"
+    rows = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l]
+    for r in rows:
+        if r["id"] == "GT-0008":
+            r["user_decision"] = "PENDING_RELOCK"
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    f = by_ref(c09.run(root))["tool:T6"]
     assert f["verdict"] == "ESCALATE" and "GT-0008 is PENDING_RELOCK" in f["message"]
+    assert "Ledger warnings" not in by_ref(c09.run(ROOT))["tool:T6"]["message"]   # locked now
 
 
 def test_corpus_messages_split_by_input():

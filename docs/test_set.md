@@ -28,7 +28,7 @@ Each row of `labels/labels.jsonl` is one (object, check) pair:
 | C10 NYC LL144 | 3 | 3 | 1 |
 | C11 GDPR Art 22 | 2 | 3 | 1 |
 | C12 Illinois | 1 | 1 | |
-| C13 timing (warn only) | 1 | 1 | |
+| C13 timing (warn only while the row is CONTESTED) | 1 | 1 | |
 | C14 India DPDP | 2 | 2 | |
 | C15 vendor claim as proof | 3 | 2 | |
 | **Total (115)** | **47** | **65** | **3** |
