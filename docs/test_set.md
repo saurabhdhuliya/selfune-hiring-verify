@@ -8,6 +8,20 @@ The employer is Northwind Synthetic Ltd (fictional). The seed is fixed (20261112
 | J2 Backend Engineer | EU | 70 | 17 |
 | J3 Operations Analyst | IN, IL | 50 | 10 |
 
+## Regenerating from source
+The data, labels, corpus, examples and ledger are already in the repo. To rebuild them from the source files (not in the repo):
+```
+pip install openpyxl jsonschema
+python scripts/update_ledger.py <hiring_ground_truth.jsonl> ledger/hiring.jsonl
+python scripts/generate_synthetic.py --erd <ERD.xlsx>
+python scripts/build_c9_corpus.py <ERD.xlsx>
+python scripts/build_examples.py
+python scripts/validate.py
+```
+Pass the ERD file's path as shown. Notes:
+- Without `--erd`, `generate_synthetic.py` writes default texts for AT09-AT11 instead of ERD-derived ones.
+- `update_ledger.py` rebuilds rows from the source file and drops fields added later in the repo (`adversary_*`, re-lock fields): copy them to the source first. See `ledger/CHANGELOG.md`.
+
 ## Scoring
 Each row of `labels/labels.jsonl` is one (object, check) pair:
 - **Planted:** the check must fire with the expected verdict. If it does, the case is caught; if not, it's missed.

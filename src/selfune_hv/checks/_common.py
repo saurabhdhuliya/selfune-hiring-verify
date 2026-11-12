@@ -21,6 +21,28 @@ def load_jsonl(path: Path) -> list[dict]:
         return [json.loads(l) for l in f if l.strip()]
 
 
+DEFAULT_DATA = "data/synthetic"
+REQUIRED_FILES = ("company.json", "decisions.jsonl")
+# Optional input files and what a missing one means: nothing to check (checks report NOT_CHECKED where it matters).
+OPTIONAL_FILES = {"tools.json": [], "group_counts.json": {}, "tool_probes.jsonl": [], "ai_text.jsonl": [],
+                  "policy_statements.jsonl": [], "role_memory.json": {"roles": []}}
+
+
+def data_dir(root: Path, data: Path | str | None = None) -> Path:
+    """The data folder: `data` if given (a company's own folder), else <root>/data/synthetic."""
+    return Path(data) if data else Path(root) / DEFAULT_DATA
+
+
+def data_file(root: Path, data: Path | str | None, name: str):
+    """Load one input file from the data folder. Missing optional files are empty; missing required ones raise."""
+    path = data_dir(root, data) / name
+    if not path.exists():
+        if name in OPTIONAL_FILES:
+            return json.loads(json.dumps(OPTIONAL_FILES[name]))
+        raise FileNotFoundError(f"{path} is required (see docs/schema.md)")
+    return load_jsonl(path) if name.endswith(".jsonl") else load_json(path)
+
+
 class Sources:
     """Ledger rows a check relies on: citation text, warnings, and whether every row is soft."""
 

@@ -6,3 +6,7 @@ __pycache__/
 data/real/
 logs/
 out/
+# Company data folders stay local: everything under data/ is ignored except the synthetic set and the C9 corpus.
+data/*
+!data/synthetic/
+!data/c9_corpus/

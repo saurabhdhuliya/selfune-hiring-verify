@@ -1,7 +1,7 @@
 """C05: four-fifths (4/5) rule on selection rates, per job and per grouping.
 
 Flags for review only. This is not a legal finding (README hard rule 6).
-Reads data/synthetic/group_counts.json, data/synthetic/company.json and ledger/hiring.jsonl.
+Reads <data>/group_counts.json, <data>/company.json and ledger/hiring.jsonl.
 Never reads labels/.
 """
 from __future__ import annotations
@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 
 from selfune_hv import ledger
+
+from ._common import data_file
 
 CHECK_ID = "C05"
 LEDGER_ID = "GT-0023"
@@ -69,10 +71,10 @@ def evaluate_grouping(groups: dict[str, dict]) -> tuple[str, str]:
     return verdict, detail
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
-    counts = _load_json(root / "data/synthetic/group_counts.json")
-    company = _load_json(root / "data/synthetic/company.json")
+    counts = data_file(root, data, "group_counts.json")
+    company = data_file(root, data, "company.json")
     row = ledger.load(str(root / "ledger/hiring.jsonl"))[LEDGER_ID]
     citation = ledger.cite(row)
     warnings = ledger.row_warnings(row)

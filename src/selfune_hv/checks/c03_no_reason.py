@@ -2,7 +2,7 @@
 
 baseline - AVL agent mode will handle unclear cases later
 
-Rule-based, no LLM. Reads data/synthetic/company.json and ledger/hiring.jsonl. Never reads labels/.
+Rule-based, no LLM. Reads <data>/company.json and ledger/hiring.jsonl. Never reads labels/.
 Only checks that a reason is stated, not that the reason is true.
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ._common import REPO_ROOT, Sources, finding, load_json
+from ._common import data_file, REPO_ROOT, Sources, finding, load_json
 
 CHECK_ID = "C03"
 BASELINE = True
@@ -25,12 +25,12 @@ def stated_reason(text: str) -> str | None:
     return m.group(0).strip(" ,") if m else None
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
     findings = []
-    for job in load_json(root / "data/synthetic/company.json")["jobs"]:
+    for job in data_file(root, data, "company.json")["jobs"]:
         for r in job.get("requirements", []):
             cue = stated_reason(r["text"])
             if cue:

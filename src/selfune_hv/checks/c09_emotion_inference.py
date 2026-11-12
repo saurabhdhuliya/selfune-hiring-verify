@@ -1,6 +1,6 @@
 """C09: emotion or personality inference about candidates. Blocks the chain (hard rule 1).
 
-Reads data/synthetic/tools.json, data/synthetic/ai_text.jsonl, data/c9_corpus/c9_inputs.jsonl
+Reads <data>/tools.json, <data>/ai_text.jsonl, data/c9_corpus/c9_inputs.jsonl
 and ledger/hiring.jsonl. Never reads labels/. Never labels a person: it only flags the tool or text.
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ from pathlib import Path
 
 from selfune_hv.emotion_terms import has_inference_cue, mentions_banned_construct
 
-from ._common import LEGAL, MISSING, REPO_ROOT, Sources, finding, load_json, load_jsonl
+from ._common import data_file, LEGAL, MISSING, REPO_ROOT, Sources, finding, load_json, load_jsonl
 
 CHECK_ID = "C09"
 REFS = ["GT-0008"]
@@ -74,17 +74,17 @@ def _msg(verdict: str, detail: str, cite: str, what: str = "text", biometric: bo
 # C09 verdicts come from hard rule 1 (Selfune policy), not from the ledger row, so they are never softened
 # when GT-0008 is pending re-lock; the row's status still shows as a ledger warning in the message.
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
     findings = []
-    for tool in load_json(root / "data/synthetic/tools.json"):
+    for tool in data_file(root, data, "tools.json"):
         verdict, detail = evaluate_tool(tool)
         bio = biometric_input(tool.get("what_it_outputs", ""), tool.get("name", ""), *tool.get("vendor_claims", []))
         findings.append(finding(CHECK_ID, f"tool:{tool['tool_id']}", verdict, REFS,
                                 _msg(verdict, detail, cite, "tool", bio)))
-    for t in load_jsonl(root / "data/synthetic/ai_text.jsonl"):
+    for t in data_file(root, data, "ai_text.jsonl"):
         verdict, detail = evaluate_text(t.get("text", ""))
         bio = biometric_input(t.get("text", ""), t.get("source", ""))
         findings.append(finding(CHECK_ID, f"ai_text:{t['text_id']}", verdict, REFS,

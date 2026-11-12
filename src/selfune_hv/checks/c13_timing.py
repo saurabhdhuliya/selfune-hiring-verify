@@ -1,6 +1,6 @@
 """C13: dates in policy statements about the EU AI Act high-risk duties or the Colorado AI law.
 
-Reads data/synthetic/company.json, policy_statements.jsonl and ledger/hiring.jsonl. Never reads labels/.
+Reads <data>/company.json, policy_statements.jsonl and ledger/hiring.jsonl. Never reads labels/.
 - Row CONTESTED (or warn_only): every finding is WARN.
 - Otherwise: the statement's date matches the ledger date -> VERIFIED; differs -> CONTRADICTED;
   no date -> UNVERIFIED. A pending row turns CONTRADICTED into WARN (hard rule 7).
@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ._common import LEGAL, REPO_ROOT, Sources, finding, jobs_in, load_json, load_jsonl
+from ._common import data_file, LEGAL, REPO_ROOT, Sources, finding, jobs_in, load_json, load_jsonl
 
 CHECK_ID = "C13"
 
@@ -25,13 +25,13 @@ _DATE = re.compile(r"\b\d{1,2} (?:January|February|March|April|May|June|July|Aug
                    r"November|December) \d{4}\b")
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
-    company = load_json(root / "data/synthetic/company.json")
+    company = data_file(root, data, "company.json")
     refs_all = [t[0] for t in TOPICS.values()]
     src = Sources(root, refs_all)
     findings = []
-    for s in load_jsonl(root / "data/synthetic/policy_statements.jsonl"):
+    for s in data_file(root, data, "policy_statements.jsonl"):
         text = s.get("text", "")
         for topic, (ref, code, pattern, ledger_date) in TOPICS.items():
             if not pattern.search(text):

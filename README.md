@@ -72,16 +72,16 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 - **Not legal advice.** Legal checks flag for review and cite ledger rows with their source and date. Ledger rows record what sources say; check the source before relying on one.
 
 ## Quick start
+The synthetic data, labels and ledger are already in the repo.
 ```
 pip install openpyxl jsonschema
-python scripts/update_ledger.py <hiring_ground_truth.jsonl> ledger/hiring.jsonl
-python scripts/generate_synthetic.py --erd <ERD.xlsx>
-python scripts/build_c9_corpus.py <ERD.xlsx>
-python scripts/build_examples.py
 python scripts/validate.py
+python scripts/score.py
+python scripts/run_loop.py
 ```
+Then open `out/report.html`.
 
-The ERD file is not in the repo: pass its path as shown.
+To run on your own data, put it in a folder under `data/` (git-ignored) in the format described in `docs/schema.md`, then run `python scripts/run_loop.py --data data/real/<company>`. To rebuild the synthetic set from source, see `docs/test_set.md`.
 
 ## License
 - **Code:** Apache-2.0, © 2026 Selfune AI. See `LICENSE`.

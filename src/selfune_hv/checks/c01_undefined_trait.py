@@ -4,7 +4,7 @@ baseline - AVL agent mode will handle unclear cases later
 
 Rule-based, no LLM. Looks up role memory first: an ACTIVE definition verifies the trait without
 asking anyone. Otherwise a vague trait word with no number, threshold or test gets one question.
-Reads data/synthetic/company.json, role_memory.json, ai_text.jsonl and ledger/hiring.jsonl.
+Reads <data>/company.json, role_memory.json, ai_text.jsonl and ledger/hiring.jsonl.
 Never reads labels/.
 """
 from __future__ import annotations
@@ -15,7 +15,7 @@ from pathlib import Path
 
 from selfune_hv.role_memory import RoleMemory
 
-from ._common import REPO_ROOT, Sources, finding, load_json, load_jsonl
+from ._common import data_file, REPO_ROOT, Sources, finding, load_json, load_jsonl
 
 CHECK_ID = "C01"
 BASELINE = True
@@ -74,12 +74,12 @@ def evaluate(text: str, role_id: str, role_title: str, memory: RoleMemory) -> tu
     return "UNVERIFIED", detail, extra
 
 
-def run(root: Path = REPO_ROOT, today: date | None = None) -> list[dict]:
+def run(root: Path = REPO_ROOT, today: date | None = None, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
-    company = load_json(root / "data/synthetic/company.json")
-    memory = RoleMemory.load(str(root / "data/synthetic/role_memory.json"), today)
+    company = data_file(root, data, "company.json")
+    memory = RoleMemory(data_file(root, data, "role_memory.json"), today)
     titles = {j["job_id"]: j["title"] for j in company["jobs"]}
 
     def make(ref: str, text: str, job_id: str) -> dict:
@@ -91,5 +91,5 @@ def run(root: Path = REPO_ROOT, today: date | None = None) -> list[dict]:
     findings = [make(f"requirement:{r['req_id']}", r["text"], j["job_id"])
                 for j in company["jobs"] for r in j.get("requirements", [])]
     findings += [make(f"ai_text:{t['text_id']}", t.get("text", ""), t.get("job_id"))
-                 for t in load_jsonl(root / "data/synthetic/ai_text.jsonl")]
+                 for t in data_file(root, data, "ai_text.jsonl")]
     return findings

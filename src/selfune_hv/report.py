@@ -16,6 +16,7 @@ from pathlib import Path
 
 from selfune_hv import ledger as ledger_mod
 from selfune_hv.checks import c01_undefined_trait, c02_years_proxy
+from selfune_hv.checks._common import data_file
 from selfune_hv.decision_chain import SEVERITY, HumanQuestion, Link, build_chain
 from selfune_hv.role_memory import RoleMemory
 
@@ -42,21 +43,21 @@ def _j(path: Path):
         return json.load(f)
 
 
-def load_data(root: Path) -> dict:
-    s = root / "data/synthetic"
-    return {"company": _j(s / "company.json"), "tools": _j(s / "tools.json"),
-            "decisions": _jl(s / "decisions.jsonl"), "ai_text": _jl(s / "ai_text.jsonl"),
-            "probes": _jl(s / "tool_probes.jsonl"), "policies": _jl(s / "policy_statements.jsonl"),
-            "ledger": ledger_mod.load(str(root / "ledger/hiring.jsonl"))}
+def load_data(root: Path, data: Path | None = None) -> dict:
+    """Input files from the data folder (default data/synthetic); the ledger always comes from the repo."""
+    f = lambda name: data_file(root, data, name)  # noqa: E731
+    return {"company": f("company.json"), "tools": f("tools.json"), "decisions": f("decisions.jsonl"),
+            "ai_text": f("ai_text.jsonl"), "probes": f("tool_probes.jsonl"), "policies": f("policy_statements.jsonl"),
+            "role_memory": f("role_memory.json"), "ledger": ledger_mod.load(str(root / "ledger/hiring.jsonl"))}
 
 
-def collect_findings(root: Path) -> list[dict]:
-    """Every check's run(root). Corpus runs are for scoring only and are not part of the report."""
+def collect_findings(root: Path, data: Path | None = None) -> list[dict]:
+    """Every check's run(root, data=...). Corpus runs are for scoring only and are not part of the report."""
     out = []
     for m in sorted(pkgutil.iter_modules(checks_pkg.__path__), key=lambda m: m.name):
         mod = importlib.import_module(f"{checks_pkg.__name__}.{m.name}")
         if hasattr(mod, "CHECK_ID") and hasattr(mod, "run"):
-            out.extend(mod.run(root))
+            out.extend(mod.run(root, data=data))
     return out
 
 
@@ -179,7 +180,7 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
     by_ref: dict[str, dict[str, dict]] = defaultdict(dict)
     for f in findings:
         by_ref[f["object_ref"]][f["check"]] = f
-    memory = RoleMemory.load(str(root / "data/synthetic/role_memory.json"), today)
+    memory = RoleMemory(data["role_memory"], today)
     jobs = {j["job_id"]: j for j in data["company"]["jobs"]}
     chains, questions = [], {}
 
@@ -314,11 +315,12 @@ def job_level_issues(findings: list[dict], data: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------- report
-def build_report(root: Path = REPO_ROOT, today: date | None = None) -> dict:
+def build_report(root: Path = REPO_ROOT, today: date | None = None, data_folder: Path | None = None) -> dict:
+    """data_folder: a company's own input folder (see docs/schema.md); default <root>/data/synthetic."""
     root = Path(root)
     today = today or date.today()
-    data = load_data(root)
-    findings = collect_findings(root)
+    data = load_data(root, data_folder)
+    findings = collect_findings(root, data_folder)
     chains, questions = build_chains(data, findings, root, today)
     idx = job_index(data)
     non_decision = [f for f in findings if not f["object_ref"].startswith("decision:")]

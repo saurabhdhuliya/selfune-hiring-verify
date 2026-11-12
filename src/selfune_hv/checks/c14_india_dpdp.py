@@ -1,12 +1,12 @@
 """C14: India DPDP. Tools on jobs that declare "IN" need a consent notice and a stated retention period.
 
-Reads data/synthetic/company.json, tools.json and ledger/hiring.jsonl. Never reads labels/.
+Reads <data>/company.json, tools.json and ledger/hiring.jsonl. Never reads labels/.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from ._common import LEGAL, MISSING, REPO_ROOT, Sources, finding, jobs_in, load_json, tools_for
+from ._common import data_file, LEGAL, MISSING, REPO_ROOT, Sources, finding, jobs_in, load_json, tools_for
 
 CHECK_ID = "C14"
 REFS = ["GT-0030"]
@@ -34,13 +34,13 @@ def check_retention(tool: dict) -> tuple[str, str]:
     return "VERIFIED", f"Retention {v} days."
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
-    in_jobs = jobs_in(load_json(root / "data/synthetic/company.json"), "IN")
+    in_jobs = jobs_in(data_file(root, data, "company.json"), "IN")
     findings = []
-    for tool in tools_for(load_json(root / "data/synthetic/tools.json"), in_jobs):
+    for tool in tools_for(data_file(root, data, "tools.json"), in_jobs):
         tid = tool["tool_id"]
         results = {"consent": check_consent(tool), "retention": check_retention(tool)}
         if all(v == "VERIFIED" for v, _ in results.values()):

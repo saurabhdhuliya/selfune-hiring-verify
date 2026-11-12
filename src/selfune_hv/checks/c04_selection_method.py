@@ -1,12 +1,12 @@
 """C04: weak selection method. Holistic combination, or an unstructured interview as the only interview.
 
-Reads data/synthetic/company.json and ledger/hiring.jsonl. Never reads labels/.
+Reads <data>/company.json and ledger/hiring.jsonl. Never reads labels/.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from ._common import REPO_ROOT, Sources, finding, load_json
+from ._common import data_file, REPO_ROOT, Sources, finding, load_json
 
 CHECK_ID = "C04"
 REFS = ["GT-0006", "GT-0007", "GT-0033"]
@@ -30,11 +30,11 @@ def evaluate_method(method: dict | None) -> tuple[str, str]:
     return "VERIFIED", detail
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     findings = []
-    for job in load_json(root / "data/synthetic/company.json")["jobs"]:
+    for job in data_file(root, data, "company.json")["jobs"]:
         verdict, detail = evaluate_method(job.get("selection_method"))
         verdict = src.soften(verdict, REFS)
         head = "Not checked" if verdict == "NOT_CHECKED" else "Flag for review" if verdict != "VERIFIED" else "OK"

@@ -2,14 +2,14 @@
 
 baseline - AVL agent mode will handle unclear cases later
 
-Rule-based, no LLM. Reads data/synthetic/decisions.jsonl. Never reads labels/.
+Rule-based, no LLM. Reads <data>/decisions.jsonl. Never reads labels/.
 "A field is empty" is a fact; "so the candidate is weak" is a conclusion the data doesn't support.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from ._common import MISSING, REPO_ROOT, finding, load_jsonl
+from ._common import data_file, MISSING, REPO_ROOT, finding, load_jsonl
 
 CHECK_ID = "C06"
 BASELINE = True
@@ -32,9 +32,9 @@ def evaluate(d: dict) -> tuple[str, str]:
     return "VERIFIED", f"Missing field(s) {', '.join(missing)}, but outcome '{outcome}' is not a negative."
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     findings = []
-    for d in load_jsonl(Path(root) / "data/synthetic/decisions.jsonl"):
+    for d in data_file(root, data, "decisions.jsonl"):
         verdict, detail = evaluate(d)
         head = {"UNVERIFIED": "Flag for review", "NOT_CHECKED": "Not checked"}.get(verdict, "OK")
         findings.append(finding(CHECK_ID, f"decision:{d['decision_id']}", verdict, REFS, f"{head} (baseline): {detail}"))

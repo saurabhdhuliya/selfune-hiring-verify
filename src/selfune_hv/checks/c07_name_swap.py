@@ -1,6 +1,6 @@
 """C07: name-swap probes. Two profiles identical except the name marker should get the same tool output.
 
-Reads data/synthetic/tool_probes.jsonl and ledger/hiring.jsonl. Never reads labels/.
+Reads <data>/tool_probes.jsonl and ledger/hiring.jsonl. Never reads labels/.
 The finding is about the tool, not about any person.
 """
 from __future__ import annotations
@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from ._common import REPO_ROOT, Sources, finding, load_jsonl
+from ._common import data_file, REPO_ROOT, Sources, finding, load_jsonl
 
 CHECK_ID = "C07"
 REFS = ["GT-0022", "GT-0050", "GT-0026"]
@@ -38,11 +38,11 @@ def evaluate_pair(probes: list[dict]) -> tuple[str, str]:
     return "VERIFIED", "Only the name differs and the tool output is the same. " + detail
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     pairs: dict[str, list[dict]] = defaultdict(list)
-    for p in load_jsonl(root / "data/synthetic/tool_probes.jsonl"):
+    for p in data_file(root, data, "tool_probes.jsonl"):
         pairs[p["pair_id"]].append(p)
 
     findings = []

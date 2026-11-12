@@ -1,6 +1,6 @@
 """C10: NYC Local Law 144 on tools used for NYC jobs: scope, bias audit age, candidate notice.
 
-Reads data/synthetic/company.json, data/synthetic/tools.json and ledger/hiring.jsonl.
+Reads <data>/company.json, <data>/tools.json and ledger/hiring.jsonl.
 Never reads labels/.
 """
 from __future__ import annotations
@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from pathlib import Path
 
-from ._common import LEGAL, REPO_ROOT, Sources, finding, load_json, parse_date
+from ._common import data_file, LEGAL, REPO_ROOT, Sources, finding, load_json, parse_date
 
 CHECK_ID = "C10"
 IN_SCOPE_MODES = {"alone", "weighted_most", "overrides_human"}
@@ -86,10 +86,10 @@ def check_notice(tool: dict) -> tuple[str, str]:
     return "VERIFIED", f"{detail}."
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, ALL_REFS)
-    company = load_json(root / "data/synthetic/company.json")
+    company = data_file(root, data, "company.json")
     nyc_jobs = {j["job_id"] for j in company["jobs"] if "NYC" in (j.get("jurisdiction") or [])}
 
     def make(tid: str, aspect: str, verdict: str, detail: str, refs: list[str]) -> dict:
@@ -99,7 +99,7 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
                        f"{head} ({aspect}): {LEGAL}. {detail}{src.cite(refs)}")
 
     findings = []
-    for tool in load_json(root / "data/synthetic/tools.json"):
+    for tool in data_file(root, data, "tools.json"):
         if not nyc_jobs.intersection(tool.get("job_ids") or []):
             continue
         tid = tool["tool_id"]

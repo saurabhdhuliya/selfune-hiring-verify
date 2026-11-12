@@ -1,6 +1,6 @@
 """C08: age or age proxy in tool rules or decision reasons.
 
-Reads data/synthetic/tools.json, data/synthetic/decisions.jsonl and ledger/hiring.jsonl.
+Reads <data>/tools.json, <data>/decisions.jsonl and ledger/hiring.jsonl.
 Never reads labels/.
 """
 from __future__ import annotations
@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ._common import LEGAL, REPO_ROOT, Sources, finding, load_json, load_jsonl
+from ._common import data_file, LEGAL, REPO_ROOT, Sources, finding, load_json, load_jsonl
 
 CHECK_ID = "C08"
 REFS = ["GT-0027", "GT-0024"]
@@ -29,13 +29,13 @@ def age_terms(text: str) -> list[str]:
     return sorted({m.group(0) for m in AGE_TERMS.finditer(norm)})
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
     findings = []
 
-    for tool in load_json(root / "data/synthetic/tools.json"):
+    for tool in data_file(root, data, "tools.json"):
         tid = tool["tool_id"]
         rules = tool.get("rules") or []
         hits = [(r, age_terms(r)) for r in rules]
@@ -50,7 +50,7 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
             findings.append(finding(CHECK_ID, f"tool:{tid}:rules", "VERIFIED", REFS,
                                     f"No age or age-proxy rule in tool {tid} ({basis}).{cite}"))
 
-    for d in load_jsonl(root / "data/synthetic/decisions.jsonl"):
+    for d in data_file(root, data, "decisions.jsonl"):
         did = d["decision_id"]
         terms = age_terms(d.get("reason_text", ""))
         if terms:

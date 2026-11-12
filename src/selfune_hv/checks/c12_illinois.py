@@ -1,12 +1,12 @@
 """C12: Illinois (HB 3773). Every tool on a job that declares "IL" needs a notice and a disparate-effect review.
 
-Reads data/synthetic/company.json, tools.json and ledger/hiring.jsonl. Never reads labels/.
+Reads <data>/company.json, tools.json and ledger/hiring.jsonl. Never reads labels/.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from ._common import LEGAL, MISSING, REPO_ROOT, Sources, finding, jobs_in, load_json, tools_for
+from ._common import data_file, LEGAL, MISSING, REPO_ROOT, Sources, finding, jobs_in, load_json, tools_for
 
 CHECK_ID = "C12"
 REFS = ["GT-0031"]
@@ -26,13 +26,13 @@ def evaluate_tool(tool: dict) -> tuple[str, str]:
                         f"{values['il_disparate_effect_review']}.")
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
-    il_jobs = jobs_in(load_json(root / "data/synthetic/company.json"), "IL")
+    il_jobs = jobs_in(data_file(root, data, "company.json"), "IL")
     findings = []
-    for tool in tools_for(load_json(root / "data/synthetic/tools.json"), il_jobs):
+    for tool in tools_for(data_file(root, data, "tools.json"), il_jobs):
         verdict, detail = evaluate_tool(tool)
         verdict = src.soften(verdict, REFS)
         head = "Illinois not checked" if verdict == "NOT_CHECKED" else "Illinois"

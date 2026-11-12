@@ -2,7 +2,7 @@
 
 baseline - AVL agent mode will handle unclear cases later
 
-Rule-based, no LLM. Reads data/synthetic/decisions.jsonl, ai_text.jsonl, tools.json and
+Rule-based, no LLM. Reads <data>/decisions.jsonl, ai_text.jsonl, tools.json and
 ledger/hiring.jsonl. Never reads labels/.
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ._common import REPO_ROOT, Sources, finding, load_json, load_jsonl
+from ._common import data_file, REPO_ROOT, Sources, finding, load_json, load_jsonl
 
 CHECK_ID = "C15"
 BASELINE = True
@@ -32,7 +32,7 @@ def evaluate_text(text: str) -> tuple[str, str]:
                           "is context, not proof. Ask for the employer's own validation data.")
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
@@ -43,14 +43,14 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
         return finding(CHECK_ID, ref, verdict, REFS, f"{head} (baseline): {detail}{cite}")
 
     texts = [(f"decision:{d['decision_id']}", d.get("reason_text", ""))
-             for d in load_jsonl(root / "data/synthetic/decisions.jsonl")]
+             for d in data_file(root, data, "decisions.jsonl")]
     texts += [(f"ai_text:{t['text_id']}", t.get("text", ""))
-              for t in load_jsonl(root / "data/synthetic/ai_text.jsonl")]
+              for t in data_file(root, data, "ai_text.jsonl")]
     results = [(ref, text, *evaluate_text(text)) for ref, text in texts]
     findings = [make(ref, verdict, detail) for ref, _, verdict, detail in results]
 
     # Tools with vendor claims: flagged only if a flagged text names the tool.
-    for tool in load_json(root / "data/synthetic/tools.json"):
+    for tool in data_file(root, data, "tools.json"):
         if not tool.get("vendor_claims"):
             continue
         name = tool.get("name", "")

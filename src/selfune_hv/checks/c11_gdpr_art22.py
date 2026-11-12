@@ -1,13 +1,13 @@
 """C11: GDPR Article 22, solely automated decisions. EU jobs only.
 
-Reads data/synthetic/company.json, tools.json, decisions.jsonl and ledger/hiring.jsonl. Never reads labels/.
+Reads <data>/company.json, tools.json, decisions.jsonl and ledger/hiring.jsonl. Never reads labels/.
 """
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-from ._common import (LEGAL, MISSING, REPO_ROOT, Sources, finding, jobs_in, load_json, load_jsonl,
+from ._common import (data_file, LEGAL, MISSING, REPO_ROOT, Sources, finding, jobs_in, load_json, load_jsonl,
                       tools_for)
 
 CHECK_ID = "C11"
@@ -52,11 +52,11 @@ def evaluate_decision(d: dict) -> tuple[str, str]:
     return "VERIFIED", f"decided_by '{by}'."
 
 
-def run(root: Path = REPO_ROOT) -> list[dict]:
+def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:
     root = Path(root)
     src = Sources(root, REFS)
     cite = src.cite(REFS)
-    eu_jobs = jobs_in(load_json(root / "data/synthetic/company.json"), "EU")
+    eu_jobs = jobs_in(data_file(root, data, "company.json"), "EU")
 
     def make(ref: str, verdict: str, detail: str) -> dict:
         verdict = src.soften(verdict, REFS)
@@ -64,7 +64,7 @@ def run(root: Path = REPO_ROOT) -> list[dict]:
         return finding(CHECK_ID, ref, verdict, REFS, f"{head}: {LEGAL}. {detail}{cite}")
 
     findings = [make(f"tool:{t['tool_id']}", *evaluate_tool(t))
-                for t in tools_for(load_json(root / "data/synthetic/tools.json"), eu_jobs)]
+                for t in tools_for(data_file(root, data, "tools.json"), eu_jobs)]
     findings += [make(f"decision:{d['decision_id']}", *evaluate_decision(d))
-                 for d in load_jsonl(root / "data/synthetic/decisions.jsonl") if d.get("job_id") in eu_jobs]
+                 for d in data_file(root, data, "decisions.jsonl") if d.get("job_id") in eu_jobs]
     return findings
