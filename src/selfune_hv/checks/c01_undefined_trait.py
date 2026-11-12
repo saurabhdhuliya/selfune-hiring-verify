@@ -39,6 +39,7 @@ def trait_words(text: str) -> list[str]:
 
 
 def _question(text: str, words: list[str], role_title: str) -> str:
+    text = text.rstrip(". ")
     q = RoleMemory.question_for(text, role_title)
     if len(q.split()) >= 25:   # long requirement: ask about the vague words only
         q = RoleMemory.question_for(" ".join(words), role_title)
