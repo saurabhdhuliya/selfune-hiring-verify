@@ -39,6 +39,38 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 - Release rule: every code check catches 100% of its planted cases, and false alarms stay under 10%.
 - Rule baselines are tuned on synthetic data; real-world accuracy is unmeasured.
 
+## Test results (v0.1, 2026-11-12)
+`py scripts/score.py`:
+
+| Check | Planted caught | Clean false alarms | NOT_CHECKED correct | Release |
+|---|---|---|---|---|
+| C01 undefined trait | 5/5 | 0/13 | - | PASS |
+| C02 years as proxy | 3/3 | 0/13 | - | PASS |
+| C03 no stated reason | 9/9 | 0/7 | - | PASS |
+| C04 weak method | 2/2 | 0/1 | - | PASS |
+| C05 4/5 rule | 2/2 | 0/2 | 1/1 | PASS |
+| C06 missing field as negative | 4/4 | 0/4 | - | PASS |
+| C07 name swap | 4/4 | 0/4 | - | PASS |
+| C08 age or age proxy | 2/2 | 0/3 | - | PASS |
+| C09 emotion inference | 4/4 | 0/6 | - | PASS |
+| C10 NYC LL144 | 3/3 | 0/3 | 1/1 | PASS |
+| C11 GDPR Art 22 | 2/2 | 0/3 | 1/1 | PASS |
+| C12 Illinois | 1/1 | 0/1 | - | PASS |
+| C13 timing | 1/1 | 0/1 | - | PASS |
+| C14 India DPDP | 2/2 | 0/2 | - | PASS |
+| C15 vendor claim as proof | 3/3 | 0/2 | - | PASS |
+
+- **C09 corpus** (`data/c9_corpus/`, 496 texts): 248/248 caught, 0/248 false alarms.
+- **Unit tests:** `py -m pytest tests`: 207 passed.
+- `py scripts/validate.py`: 0 failures.
+
+## Limits
+- **Synthetic data, built alongside the checks.** The test set and the checks were written in the same project, and the C01-C03 requirement labels follow each check's stated rule. A perfect score shows the checks follow their rules on this data, not that they are right on real hiring data.
+- **Rule baselines.** C01, C02, C03, C06 and C15 are keyword and pattern rules. Unclear cases are meant for an AVL agent mode that is not built yet.
+- **C09 corpus is template-based.** The cue list catches all 248 positives with no false alarms, which shows the corpus is too easy, not that the detector is good (see `docs/erd_use.md`).
+- **Real-world accuracy is unmeasured.** No check has been scored on real postings or decisions, or on labels written by someone who hasn't seen the code.
+- **Not legal advice.** Legal checks flag for review and cite ledger rows with their source and date. Ledger rows record what sources say; check the source before relying on one.
+
 ## Quick start
 ```
 pip install openpyxl jsonschema
@@ -52,4 +84,5 @@ python scripts/validate.py
 The ERD file is not in the repo: pass its path as shown.
 
 ## License
-Code: Apache-2.0 (add a LICENSE file). Ledger text: CC BY 4.0, credit Selfune, with sources credited per row.
+- **Code:** Apache-2.0, © 2026 Selfune AI. See `LICENSE`.
+- **Ledger text** (`ledger/`): CC BY 4.0. Credit Selfune AI, and credit the sources per row. See `LEDGER_LICENSE.md`.
