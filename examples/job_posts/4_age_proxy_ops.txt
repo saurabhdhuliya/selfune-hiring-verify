@@ -1,0 +1,6 @@
+Operations Assistant (fictional)
+
+Requirements:
+- Graduation year 2022 or later.
+- Applicants must be aged 21 to 30.
+- Uses spreadsheets daily, tested in a 30-minute exercise, because stock reports are built in Excel.

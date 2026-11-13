@@ -1,0 +1,7 @@
+Data Analyst (Northwind Synthetic Ltd, fictional)
+
+Requirements:
+- Writes SQL that answers a weekly sales question, tested in a 90-minute work sample, because reports pull from SQL.
+- Reconciles two exports with under 1% variance in a 2-hour exercise, so that finance can close the month on time.
+
+We offer remote work and a yearly learning budget.

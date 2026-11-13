@@ -27,7 +27,8 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 | `ledger/hiring.jsonl` | 50 rule rows with `recheck_by`, `use_as` and `display_label`. GT-0008, GT-0009, GT-0023, GT-0025 and GT-0035 were re-checked or changed after the 2026-11-12 adversary check and re-locked by human review the same day. Pending rows never cause a hard fail (ESCALATE or CONTRADICTED drops to WARN); UNVERIFIED still asks a human. |
 | `schemas/decision_chain.schema.json` | The decision chain format: one verdict per link, the weakest link, and questions for a human. |
 | `schemas/role_memory.schema.json` | The employer's trait definitions, written once per role and locked by a human. |
-| `src/selfune_hv/` | Chain roll-up, role-memory lookup, ledger warnings and C9 vocabulary. No LLM. |
+| `src/selfune_hv/` | Chain roll-up, role-memory lookup, ledger warnings and C9 vocabulary; `checks/` (C01-C15), `report.py`, `loop.py` (full loop), `text_mode.py`, `cli.py` (`selfune-verify`), `mcp_server.py` (`selfune-verify-mcp`). No LLM. |
+| `examples/job_posts/` | Five synthetic job posts and AI summaries for text mode. |
 | `data/synthetic/` | A fake employer: 3 jobs, 200 candidates, 13 tools, 8 name-swap probe pairs, 11 AI-written texts. |
 | `data/c9_corpus/` | 496 texts for the emotion-inference detector, built from ERD label fields. |
 | `labels/` | **The answers. The loop must never read this folder.** |
@@ -61,17 +62,62 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 | C15 vendor claim as proof | 3/3 | 0/2 | - | PASS |
 
 - **C09 corpus** (`data/c9_corpus/`, 496 texts): 248/248 caught, 0/248 false alarms.
-- **Unit tests:** `py -m pytest tests`: 207 passed.
+- **Unit tests:** `py -m pytest tests`: 248 tests. With `pip install .` (core): 245 passed, 3 MCP tests skipped. With `pip install ".[mcp]"`: 247 passed, 1 core-only test skipped.
 - `py scripts/validate.py`: 0 failures.
 
 ## Limits
 - **Synthetic data, built alongside the checks.** The test set and the checks were written in the same project, and the C01-C03 requirement labels follow each check's stated rule. A perfect score shows the checks follow their rules on this data, not that they are right on real hiring data.
 - **Rule baselines.** C01, C02, C03, C06 and C15 are keyword and pattern rules. Unclear cases are meant for an AVL agent mode that is not built yet.
 - **C09 corpus is template-based.** The cue list catches all 248 positives with no false alarms, which shows the corpus is too easy, not that the detector is good (see `docs/erd_use.md`).
+- **Text mode is a heuristic reader.** It splits text into lines and guesses which lines are requirements from headings and wording. It has no role memory, so every vague trait gets a question, even one the employer has already defined.
 - **Real-world accuracy is unmeasured.** No check has been scored on real postings or decisions, or on labels written by someone who hasn't seen the code.
 - **Not legal advice.** Legal checks flag for review and cite ledger rows with their source and date. Ledger rows record what sources say; check the source before relying on one.
 
-## Quick start
+## Quick start: 1 command
+```
+pip install .
+selfune-verify examples/job_posts/2_vague_support_rep.txt
+```
+That checks a job post or an AI hiring summary given as plain text (any `.txt` file, or `-` for stdin) and prints a readable report: a verdict per line, the overall status and weakest link, questions for you (each with what *not* to ask), and the ledger rows behind every flag. Text mode runs the checks that work on text alone: C01 undefined trait, C02 years as proxy, C03 no stated reason, C08 age or age proxy, C09 emotion or personality inference, C15 vendor claim as proof.
+
+```
+selfune-verify post.txt --json          # the same report as JSON
+selfune-verify --data data/real/acme    # the full loop on a company folder (docs/schema.md), writes out/report.html
+```
+Python 3.10+. The ledger and schemas are installed with the package. Five synthetic sample posts are in `examples/job_posts/`.
+
+## Use from Claude / any MCP agent
+The MCP server is an optional extra, so the core install stays light:
+```
+pip install ".[mcp]"
+```
+This adds `selfune-verify-mcp` (stdio), built on the official Python MCP SDK (`mcp>=1.2,<3`: `MCPServer` in mcp 2.x, `FastMCP` in mcp 1.x). Without the extra, the command prints how to install it. It has three tools:
+
+| Tool | Returns |
+|---|---|
+| `verify_text(text)` | The text-mode report for a job post or AI hiring summary |
+| `verify_folder(path)` | The full-loop report for a data folder (read-only: writes nothing) |
+| `ledger_row(id)` | One ledger row, e.g. `GT-0023`, with its status, caveats, source, date and warnings |
+
+**Claude Desktop:** add this to `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`), then restart Claude Desktop:
+```json
+{
+  "mcpServers": {
+    "selfune-hiring-verify": {
+      "command": "selfune-verify-mcp"
+    }
+  }
+}
+```
+If you installed into a virtual environment, use the full path to the command instead, e.g. `"command": "C:\\path\\to\\venv\\Scripts\\selfune-verify-mcp.exe"` or `"/path/to/venv/bin/selfune-verify-mcp"`.
+
+**Claude Code:** `claude mcp add selfune-hiring-verify -- selfune-verify-mcp`
+
+**Any other MCP client:** run `selfune-verify-mcp` as a stdio server.
+
+The server tells the agent to relay verdicts as flags for a human, keep the citations, and respect each question's `do_not_ask`. It never scores or ranks people, and its output is not legal advice.
+
+## Quick start from the repo
 The synthetic data, labels and ledger are already in the repo.
 ```
 pip install openpyxl jsonschema

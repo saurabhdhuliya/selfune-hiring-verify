@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "selfune-hiring-verify"
+version = "0.1.0"
+description = "Checks a hiring decision's reasoning before it is final. Verifies process, not people. No LLM."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "LEDGER_LICENSE.md"]
+authors = [{ name = "Selfune AI" }]
+dependencies = [
+    "jsonschema>=4",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.2,<3"]      # selfune-verify-mcp: pip install ".[mcp]" (MCPServer in mcp 2.x, FastMCP in mcp 1.x)
+source = ["openpyxl>=3"]   # only for rebuilding the synthetic set from ERD source files
+dev = ["pytest>=8"]
+
+[project.scripts]
+selfune-verify = "selfune_hv.cli:main"
+selfune-verify-mcp = "selfune_hv.mcp_server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# The ledger and schemas ship with the package; selfune_hv.paths finds them in the repo or under <prefix>/share.
+[tool.setuptools.data-files]
+"share/selfune-hiring-verify/ledger" = ["ledger/hiring.jsonl", "ledger/CHANGELOG.md"]
+"share/selfune-hiring-verify/schemas" = [
+    "schemas/decision_chain.schema.json",
+    "schemas/decision.schema.json",
+    "schemas/role_memory.schema.json",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

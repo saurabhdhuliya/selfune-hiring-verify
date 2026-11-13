@@ -10,3 +10,7 @@ out/
 data/*
 !data/synthetic/
 !data/c9_corpus/
+# Packaging artefacts
+build/
+dist/
+*.egg-info/

@@ -1,0 +1,6 @@
+Backend Engineer (fictional)
+
+What you bring:
+- Minimum 5 years of backend experience.
+- 3+ years of Go experience.
+- Ships and debugs production services, because the team owns uptime.
