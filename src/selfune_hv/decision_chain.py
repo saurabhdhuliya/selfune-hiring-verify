@@ -85,8 +85,10 @@ def evidence_status(observed_confidence: Optional[str], inference_confidence: Op
 def roll_up(links: list[Link], high_risk: bool = False) -> tuple[str, Optional[str]]:
     """Return (chain_status, weakest_link_id).
 
-    Weakest link = first non-VERIFIED link in chain order (need -> requirement -> evidence -> decision),
-    because everything downstream inherits its doubt. Status = worst verdict.
+    Weakest link = the non-VERIFIED link with the highest severity
+    (ESCALATE > CONTRADICTED > UNVERIFIED > NOT_CHECKED > WARN); ties go to the earliest link in
+    chain order (need -> requirement -> evidence -> decision), because everything downstream
+    inherits its doubt. Status = worst verdict.
     High-risk chains (legal check involved, or decision by tool alone) escalate
     UNVERIFIED/CONTRADICTED to ESCALATE (section 5, step 4).
     Inherited links (job-level findings) are left out: they are reported once per job, not per decision.
@@ -95,7 +97,9 @@ def roll_up(links: list[Link], high_risk: bool = False) -> tuple[str, Optional[s
     own = [l for l in links if not l.inherited] or links
     ordered = sorted(own, key=lambda l: LINK_ORDER.index(l.type))
     worst = max((l.status for l in ordered), key=lambda s: SEVERITY[s])
-    weakest = next((l.link_id for l in ordered if l.status != "VERIFIED"), None)
+    flagged = [l for l in ordered if l.status != "VERIFIED"]
+    # min() keeps the first of equal keys, so ties fall back to chain order (stable sort above).
+    weakest = min(flagged, key=lambda l: -SEVERITY[l.status]).link_id if flagged else None
     if high_risk and worst in ("UNVERIFIED", "CONTRADICTED"):
         worst = "ESCALATE"
     return worst, weakest

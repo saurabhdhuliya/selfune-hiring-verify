@@ -70,6 +70,15 @@ def test_ai_summary_is_blocked_and_flags_vendor_claim():
     assert "EU AI Act prohibits inferring emotions from biometric data" in e2["findings"][0]["message"]  # video input
 
 
+def test_weakest_link_is_most_severe_not_first():
+    text = ("Requirements:\n- Minimum 5 years of experience.\n"
+            "- Excellent attitude and a great culture fit.\n- Applicants must be aged 21 to 30.\n")
+    r = tm.verify_text(text, ROOT, today=TODAY)
+    status = {it["link_id"]: it["status"] for it in r["items"]}
+    assert status == {"R1": "UNVERIFIED", "R2": "UNVERIFIED", "R3": "ESCALATE"}
+    assert r["status"] == "ESCALATE" and r["weakest_link"] == "R3"
+
+
 @pytest.mark.parametrize("name", sorted(p.name for p in POSTS.glob("*.txt")))
 def test_every_post_questions_short_with_do_not_ask(name):
     r = run_post(name)

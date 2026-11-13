@@ -17,7 +17,7 @@
       "items": {"$ref": "#/$defs/link"}
     },
     "chain_status": {"$ref": "#/$defs/verdict"},
-    "weakest_link": {"type": ["string", "null"], "description": "link_id of the first link that is not VERIFIED, or null when all are VERIFIED."},
+    "weakest_link": {"type": ["string", "null"], "description": "link_id of the non-VERIFIED link with the most severe verdict (ESCALATE > CONTRADICTED > UNVERIFIED > NOT_CHECKED > WARN), ties broken by chain order N -> R -> E -> D; null when all are VERIFIED."},
     "human_questions": {
       "type": "array",
       "items": {"$ref": "#/$defs/human_question"}
