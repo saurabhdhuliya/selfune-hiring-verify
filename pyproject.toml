@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selfune-hiring-verify"
-version = "0.1.0"
+version = "0.3.0"
 description = "Checks a hiring decision's reasoning before it is final. Verifies process, not people. No LLM."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,7 +16,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.2,<3"]      # selfune-verify-mcp: pip install ".[mcp]" (MCPServer in mcp 2.x, FastMCP in mcp 1.x)
+space = ["gradio>=5"]      # the Hugging Face Space in space/ (the optional model also needs transformers and torch)
+mcp = ["mcp>=1.2,<3"]     # selfune-verify-mcp: pip install ".[mcp]" (MCPServer in mcp 2.x, FastMCP in mcp 1.x)
 source = ["openpyxl>=3"]   # only for rebuilding the synthetic set from ERD source files
 dev = ["pytest>=8"]
 
@@ -30,6 +31,12 @@ where = ["src"]
 # The ledger and schemas ship with the package; selfune_hv.paths finds them in the repo or under <prefix>/share.
 [tool.setuptools.data-files]
 "share/selfune-hiring-verify/ledger" = ["ledger/hiring.jsonl", "ledger/CHANGELOG.md"]
+# The synthetic sample company: the Space "Run on sample company" button and `selfune-verify --data` need it after `pip install .`.
+"share/selfune-hiring-verify/data/synthetic" = [
+    "data/synthetic/company.json", "data/synthetic/decisions.jsonl", "data/synthetic/tools.json",
+    "data/synthetic/group_counts.json", "data/synthetic/role_memory.json", "data/synthetic/ai_text.jsonl",
+    "data/synthetic/tool_probes.jsonl", "data/synthetic/policy_statements.jsonl",
+]
 "share/selfune-hiring-verify/schemas" = [
     "schemas/decision_chain.schema.json",
     "schemas/decision.schema.json",

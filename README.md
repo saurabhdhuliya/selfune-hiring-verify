@@ -62,8 +62,14 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 | C15 vendor claim as proof | 3/3 | 0/2 | - | PASS |
 
 - **C09 corpus** (`data/c9_corpus/`, 496 texts): 248/248 caught, 0/248 false alarms.
-- **Unit tests:** `py -m pytest tests`: 248 tests. With `pip install .` (core): 245 passed, 3 MCP tests skipped. With `pip install ".[mcp]"`: 247 passed, 1 core-only test skipped.
+- **Unit tests:** `py -m pytest tests`: 300 tests. Core install: 299 passed, 1 skipped (MCP tests skipped without `.[mcp]`). With `.[mcp]` and gradio: 301 passed, 1 core-only test skipped.
 - `py scripts/validate.py`: 0 failures.
+
+## Mother assumptions (v0.3)
+`src/selfune_hv/mother.py` builds a dependency graph from the decision chains (role need -> requirement -> evidence -> decision, plus job-level flags that feed the evidence of the decisions they affect). For each UNVERIFIED, CONTRADICTED or ESCALATE node (and a missing role need) it counts the decisions and links that rest on it, merges nodes that raise the same question, and returns the top 1-3: one question (under 25 words), decisions unblocked, ledger citation. No LLM. It is in `report.json` (`mother_assumptions`) and at the top of `report.html`, and in text mode. In a pasted job post there are no decisions, so the order is severity, then position.
+
+## Space (`space/`)
+Gradio app with four tabs (job post, one decision, full audit, how it works). An optional small open model (ZeroGPU) may only cut messy text into claims; `claims.validate_claims` keeps a claim only if every word is in the user's text, and rules decide every verdict. Live: https://huggingface.co/spaces/saurabhdhuliya/selfune-hiring-verify
 
 ## Limits
 - **Synthetic data, built alongside the checks.** The test set and the checks were written in the same project, and the C01-C03 requirement labels follow each check's stated rule. A perfect score shows the checks follow their rules on this data, not that they are right on real hiring data.

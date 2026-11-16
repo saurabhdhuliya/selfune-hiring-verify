@@ -16,6 +16,7 @@ from datetime import date
 from pathlib import Path
 
 from selfune_hv import ledger as ledger_mod
+from selfune_hv import mother
 from selfune_hv.checks import (c01_undefined_trait as c01, c02_years_proxy as c02, c03_no_reason as c03,
                                c08_age_proxy as c08, c09_emotion_inference as c09, c15_vendor_claim as c15)
 from selfune_hv.checks._common import LEGAL, Sources
@@ -70,8 +71,11 @@ def _f(check: str, verdict: str, message: str, cite: str, **extra) -> dict:
 
 
 def check_line(text: str, kind: str, src: Sources, memory: RoleMemory, role_id: str | None = None,
-               role_title: str = "this role") -> list[dict]:
-    """All text-mode findings for one line (VERIFIED ones included, so callers can compare with the main loop)."""
+               role_title: str = "this role", checks: set[str] | None = None) -> list[dict]:
+    """Text-mode findings for one line (VERIFIED ones included, so callers can compare with the main loop).
+
+    `checks` limits which checks run (default: all of TEXT_CHECKS).
+    """
     cite = lambda c: src.cite(REFS[c])  # noqa: E731
     out = []
     if kind == "requirement":
@@ -104,7 +108,7 @@ def check_line(text: str, kind: str, src: Sources, memory: RoleMemory, role_id: 
     v, detail = c15.evaluate_text(text)
     out.append(_f("C15", src.soften(v, REFS["C15"]), ("Flag for review (baseline): " if v == "UNVERIFIED" else "OK (baseline): ")
                   + detail, cite("C15")))
-    return out
+    return [f for f in out if checks is None or f["check"] in checks]
 
 
 # ---------------------------------------------------------------- questions
@@ -149,15 +153,29 @@ def line_questions(link_id: str, text: str, kind: str, flags: dict[str, dict]) -
 
 
 # ---------------------------------------------------------------- report
+def lines_from_claims(claims: list[str]) -> list[dict]:
+    """Lines from claims split by something other than line breaks (e.g. the optional model on the Space).
+
+    The kind is guessed from the claim's own wording, the same cue list split_lines uses. Rules decide every verdict.
+    """
+    return [{"text": c.strip(), "kind": "requirement" if _REQ_CUE.search(c) else "statement"}
+            for c in claims if re.search(r"\w", c or "")]
+
+
 def verify_text(text: str, root: Path | None = None, role_memory: dict | None = None, role_id: str | None = None,
-                role_title: str = "this role", today: date | None = None) -> dict:
-    """Verify plain text. Returns a JSON-ready report: per-line verdicts, status, weakest link, questions."""
+                role_title: str = "this role", today: date | None = None, checks: list[str] | None = None,
+                claims: list[str] | None = None) -> dict:
+    """Verify plain text. Returns a JSON-ready report: per-line verdicts, status, weakest link, questions.
+
+    checks: run only these checks (default all of TEXT_CHECKS). claims: use these lines instead of splitting `text`.
+    """
     root = Path(root) if root else resource_root()
+    run_checks = [c for c in TEXT_CHECKS if checks is None or c in checks]
     refs_all = sorted({r for rs in REFS.values() for r in rs})
     src = Sources(root, refs_all)
     memory = RoleMemory(role_memory or {"roles": []}, today)
-    lines = split_lines(text)
-    items, links, questions, seen = [], [], [], set()
+    lines = lines_from_claims(claims) if claims is not None else split_lines(text)
+    items, links, questions, seen, asks_by_line = [], [], [], set(), {}
     n_req = n_stmt = 0
     for ln in lines:
         if ln["kind"] == "requirement":
@@ -166,7 +184,11 @@ def verify_text(text: str, root: Path | None = None, role_memory: dict | None = 
         else:
             n_stmt += 1
             lid, ltype = f"E{n_stmt}", "evidence"
-        findings = check_line(ln["text"], ln["kind"], src, memory, role_id, role_title)
+        findings = check_line(ln["text"], ln["kind"], src, memory, role_id, role_title, set(run_checks))
+        if not findings:                                      # no selected check applies to this line
+            n_req -= ln["kind"] == "requirement"
+            n_stmt -= ln["kind"] != "requirement"
+            continue
         flags = {f["check"]: f for f in findings if f["verdict"] != "VERIFIED"}
         status = max((f["verdict"] for f in findings), key=lambda s: SEVERITY[s])
         items.append({"link_id": lid, "kind": ln["kind"], "text": ln["text"], "status": status,
@@ -175,6 +197,7 @@ def verify_text(text: str, root: Path | None = None, role_memory: dict | None = 
         links.append(Link(lid, ltype, ln["text"], status, "code" if status == "VERIFIED" else "human",
                           ledger_refs=sorted({r for f in flags.values() for r in f["ledger_refs"]}),
                           check_refs=sorted(flags)))
+        asks_by_line[lid] = [_clean(q.__dict__) for q in line_questions(lid, ln["text"], ln["kind"], flags)]
         for q in line_questions(lid, ln["text"], ln["kind"], flags):
             if q.ask not in seen:
                 seen.add(q.ask)
@@ -192,12 +215,14 @@ def verify_text(text: str, root: Path | None = None, role_memory: dict | None = 
         status, weakest = roll_up(links, high_risk)
     cited = sorted({r for it in items for f in it["findings"] for r in f["ledger_refs"]})
     rows = ledger_mod.load(str(root / "ledger/hiring.jsonl"))
+    citations = {r: {"id": r, "label": rows[r]["display_label"], "url": rows[r]["evidence"]["url"],
+                     "retrieved": rows[r]["evidence"]["retrieved"]} for r in cited}
     counts: dict[str, int] = {}
     for it in items:
         counts[it["status"]] = counts.get(it["status"], 0) + 1
     return {
         "mode": "text",
-        "checks": TEXT_CHECKS,
+        "checks": run_checks,
         "status": status,
         "weakest_link": weakest,
         "blocked": blocked_link is not None,
@@ -206,8 +231,8 @@ def verify_text(text: str, root: Path | None = None, role_memory: dict | None = 
                     "lines_by_status": counts, "human_questions": len(questions)},
         "items": items,
         "human_questions": questions,
-        "citations": {r: {"id": r, "label": rows[r]["display_label"], "url": rows[r]["evidence"]["url"],
-                          "retrieved": rows[r]["evidence"]["retrieved"]} for r in cited},
+        "mother_assumptions": mother.mother_from_text(items, asks_by_line, citations),
+        "citations": citations,
         "footer": FOOTER,
     }
 
@@ -220,6 +245,13 @@ def format_text(report: dict) -> str:
            + (" · BLOCKED by C09" if report["blocked"] else "") + (" · high risk" if report["high_risk"] else ""),
            f"Lines: {s['lines']} ({s['requirement_lines']} requirement, {s['statement_lines']} other) · "
            + ", ".join(f"{k} {v}" for k, v in sorted(s["lines_by_status"].items())), ""]
+    if report.get("mother_assumptions"):
+        out.append("Mother assumptions (answer these first):")
+        for m in report["mother_assumptions"]:
+            out.append(f"  {m['order']}. {m['question']}")
+            out.append(f"     {mother.unblocks_text(m)} Checks: {', '.join(m['checks'])}"
+                       + (f" · cites {', '.join(m['ledger_refs'])}" if m["ledger_refs"] else ""))
+        out.append("")
     for it in report["items"]:
         mark = "OK " if it["status"] == "VERIFIED" else "!! "
         out.append(f"{mark}{it['link_id']:<4} {it['status']:<12} {it['text']}")

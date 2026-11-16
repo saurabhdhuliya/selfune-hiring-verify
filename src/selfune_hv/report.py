@@ -15,6 +15,7 @@ from datetime import date
 from pathlib import Path
 
 from selfune_hv import ledger as ledger_mod
+from selfune_hv import mother
 from selfune_hv.checks import c01_undefined_trait, c02_years_proxy
 from selfune_hv.checks._common import data_file
 from selfune_hv.decision_chain import SEVERITY, HumanQuestion, Link, build_chain
@@ -251,7 +252,7 @@ def build_chains(data: dict, findings: list[dict], root: Path, today: date | Non
         for key, q in job_qs + qs:
             entry = questions.setdefault(key, {"job_id": job["job_id"], "ask": q.ask, "why": q.why,
                                                "do_not_ask": q.do_not_ask, "store_answer_in": q.store_answer_in,
-                                               "about": None, "applies_to": []})
+                                               "about": None, "check": key[1], "applies_to": []})
             if q.link_id.startswith("R"):
                 entry["about"] = f"requirement:{job['job_id']}-{q.link_id}"
             entry["applies_to"].append(d["decision_id"])
@@ -307,7 +308,7 @@ def job_level_issues(findings: list[dict], data: dict) -> list[dict]:
         affected = [d["decision_id"] for d in data["decisions"] if d["job_id"] in jobs
                     and (tool is None or "tools_used" not in d or tool in d["tools_used"])]
         rows.append({"object_ref": ref, "category": category(ref), "check": f["check"], "verdict": f["verdict"],
-                     "job_ids": sorted(jobs), "tool_id": tool, "affects_decisions": len(affected),
+                     "job_ids": sorted(jobs), "tool_id": tool, "affects_decisions": len(affected), "decision_ids": affected,
                      "ledger_refs": f["ledger_refs"], "message": short_message(f["message"])})
     order = {v: i for i, v in enumerate(["ESCALATE", "CONTRADICTED", "UNVERIFIED", "NOT_CHECKED", "WARN"])}
     rows.sort(key=lambda r: (r["job_ids"], order.get(r["verdict"], 9), r["object_ref"], r["check"]))
@@ -329,7 +330,7 @@ def build_report(root: Path = REPO_ROOT, today: date | None = None, data_folder:
     warnings = ledger_warnings(data["ledger"], today)
     cited = {r for f in findings for r in f["ledger_refs"]} | {w["id"] for w in warnings}
     issues = job_level_issues(non_decision, data)
-    return {
+    report = {
         "employer": data["company"]["employer_name"],
         "generated_on": today.isoformat(),
         "summary": {
@@ -355,6 +356,8 @@ def build_report(root: Path = REPO_ROOT, today: date | None = None, data_folder:
         "tools": [{"tool_id": t["tool_id"], "name": t.get("name", ""), "job_ids": t.get("job_ids", [])}
                   for t in data["tools"]],
     }
+    report["mother_assumptions"] = mother.mother_assumptions(report)
+    return report
 
 
 def chains_for_schema(report: dict) -> list[dict]:
@@ -415,6 +418,29 @@ def _history(ref: str, history: dict | None) -> str:
     return f"{_e(e['action'])}<div class='muted'>{_e(e['decided_by_role'])} · {_e(when)}</div>"
 
 
+def _mother_html(items: list[dict] | None) -> str:
+    """Top of the report: the 1-3 unverified assumptions that most decisions rest on."""
+    if items is None:
+        return ""
+    if not items:
+        return ("<h2>Mother assumptions</h2><div class='muted'>No unverified or contradicted link was found, so "
+                "nothing needs to be answered first.</div>")
+    out = ["<h2>Mother assumptions</h2><div class='muted'>Answer these first. Each is an unverified or contradicted "
+           "link that other links and decisions rest on. Found by counting dependencies, not by an LLM.</div><ol class='q'>"]
+    for m in items:
+        cites = {c["id"]: c for c in m["citations"]}
+        out.append(f"<li>{_badge(m['status'])} <b>{_e(m['question'])}</b>"
+                   f"<div class='muted'>{_e(mother.unblocks_text(m))} Checks: {_e(', '.join(m['checks']))}"
+                   + (f" · {_e(', '.join(m['job_ids']))}" if m["job_ids"] else "") + "</div>"
+                   + (f"<div class='muted'>About: {_e(_short(m['statement'], 24))}</div>" if m["statement"] else "")
+                   + (f"<div class='muted'>Avoid: {_e(m['do_not_ask'])}</div>" if m["do_not_ask"] else "")
+                   + (_cites([r for r in m["ledger_refs"] if r in cites], cites) if cites
+                      else f"<div class='cite'>{_e(m['ledger_note'])}</div>")
+                   + "</li>")
+    out.append("</ol>")
+    return "".join(out)
+
+
 def render_html(report: dict, history: dict | None = None) -> str:
     """history: flag_ref -> latest outcome-log entry. When given, flags get a 'Flag history' column."""
     cites = report["citations"]
@@ -424,6 +450,7 @@ def render_html(report: dict, history: dict | None = None) -> str:
            f"<title>Process Verification Report</title><style>{_CSS}</style></head><body><main>",
            f"<h1>Hiring process verification</h1><div class='muted'>{_e(report['employer'])} · generated {_e(report['generated_on'])} · "
            f"{s['chains']} decision chains" + (f" · run {_e(report['run_id'])}" if report.get("run_id") else "") + "</div>"]
+    out.append(_mother_html(report.get("mother_assumptions")))
     issues = report["job_level_issues"]
     out.append(f"<h2>Job-level issues ({len(issues)})</h2><div class='muted'>Flags on requirements, selection method, "
                "tools and group counts. Each is reported once here, not repeated in every decision chain.</div><div class='cards'>")
