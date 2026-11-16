@@ -9,7 +9,7 @@ python_version: '3.12'
 app_file: app.py
 pinned: false
 license: apache-2.0
-short_description: Check a job post, a decision or a full audit. Process, not people.
+short_description: Check job posts, decisions and audits. Process, not people.
 ---
 
 Checks the hiring process, never the person. Source: https://github.com/saurabhdhuliya/selfune-hiring-verify (folder `space/`).
