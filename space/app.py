@@ -170,12 +170,15 @@ with gr.Blocks(title="Selfune Hiring Verify", delete_cache=(60, 300)) as demo:
     gr.Markdown("# Selfune Hiring Verify\nChecks the hiring **process**, never the person. It does not score, rank or "
                 f"reject anyone. Nothing you paste or upload is stored. [Open source on GitHub]({views.REPO}).")
     with gr.Tabs():
-        with gr.Tab("Check a job post"):
+        with gr.Tab("Check a job post or AI tool claim"):
             gr.HTML(views.banner())
             gr.Markdown("Paste a job post. It is split into requirement lines, each is checked for an undefined trait (C01), "
                         "years used as a proxy (C02) and no stated reason (C03), then the **mother assumptions** are "
                         "returned: the 1-3 questions that unblock the most. It also screens for age proxies (C08), so an "
-                        "age rule is never asked to justify itself.")
+                        "age rule is never asked to justify itself. Paste a hiring tool's product page or an AI screening "
+                        "summary and it also flags unvalidated claims (C16): scores with no stated outcome, 'verified' "
+                        "with no stated check, 'bias-free', behavioural readings from voice or video, and screening "
+                        "with no person in the loop.")
             post = gr.Textbox(lines=12, label="Job post", placeholder="Requirements:\n- 5+ years of experience\n- Excellent communication skills")
             use_model = gr.Checkbox(False, label="Use a small open model to split messy text into one-sentence claims (optional)",
                                     info="Rules still decide every verdict. If the model fails, lines are split by line breaks.")

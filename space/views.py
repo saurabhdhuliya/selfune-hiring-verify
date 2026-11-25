@@ -83,8 +83,18 @@ def mother_block(items: list[dict], empty: str = "No unverified or contradicted 
     return "".join(out)
 
 
+CONTACT = "https://selfune.com/contact"
+
+
+def _cta() -> str:
+    return ('<div class="sv-cta" style="margin:14px 0;padding:12px 14px;border:1px solid #c7d2fe;border-radius:8px;">'
+            "<strong>Want this run on your whole hiring flow?</strong> Selfune does a free written audit: your job posts, "
+            "screening rules and AI tool outputs, with the 1-3 assumptions to test first. "
+            f'<a href="{CONTACT}" target="_blank" rel="noopener">Talk to the founder</a></div>')
+
+
 def _foot(extra: str = "") -> str:
-    return ('<p class="sv-small">GT-xxxx codes are rows in the open ledger of sources '
+    return (_cta() + '<p class="sv-small">GT-xxxx codes are rows in the open ledger of sources '
             f'(<a href="{REPO}/blob/main/ledger/hiring.jsonl" target="_blank" rel="noopener">see ledger</a>). '
             "Checks the process, not people. Rule baselines tested on synthetic data; accuracy on real hiring data is "
             f"not measured. Not legal advice. {e(extra)}</p>")

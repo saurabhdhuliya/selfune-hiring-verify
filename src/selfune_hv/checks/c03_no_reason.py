@@ -20,9 +20,16 @@ REFS = ["GT-0020"]
 REASON = re.compile(r"\bbecause\b|\bso that\b|\brequired by\b|\bin order to\b|\bso as to\b|,\s*to\s+[a-z]+", re.I)
 
 
+# "Achieve a monthly target of 15 lakh", "Close 10 deals a quarter": a measurable result of the job, not a proxy for it.
+OUTCOME = re.compile(r"^\s*(?:achieve|deliver|close|hit|meet|answer|resolve|handle|generate|sell|ship|reduce|increase|"
+                     r"grow|build|manage)s?\b[^.]*\d", re.I)
+
+
 def stated_reason(text: str) -> str | None:
     m = REASON.search(text)
-    return m.group(0).strip(" ,") if m else None
+    if m:
+        return m.group(0).strip(" ,")
+    return "measurable outcome of the role" if OUTCOME.search(text) else None
 
 
 def run(root: Path = REPO_ROOT, data: Path | None = None) -> list[dict]:

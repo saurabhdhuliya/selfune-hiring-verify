@@ -18,7 +18,8 @@ from pathlib import Path
 from selfune_hv import ledger as ledger_mod
 from selfune_hv import mother
 from selfune_hv.checks import (c01_undefined_trait as c01, c02_years_proxy as c02, c03_no_reason as c03,
-                               c08_age_proxy as c08, c09_emotion_inference as c09, c15_vendor_claim as c15)
+                               c08_age_proxy as c08, c09_emotion_inference as c09, c15_vendor_claim as c15,
+                               c16_unvalidated_claim as c16)
 from selfune_hv.checks._common import LEGAL, Sources
 from selfune_hv.decision_chain import SEVERITY, HumanQuestion, Link, _clean, roll_up
 from selfune_hv.paths import resource_root
@@ -26,8 +27,9 @@ from selfune_hv.role_memory import RoleMemory
 
 FOOTER = "Verifies process, not people. Not legal advice."
 REFS = {"C01": ["GT-0019", "GT-0021"], "C02": ["GT-0019"], "C03": ["GT-0020"], "C08": ["GT-0027", "GT-0024"],
-        "C09": ["GT-0008"], "C15": ["GT-0015", "GT-0017"]}
-TEXT_CHECKS = ["C01", "C02", "C03", "C08", "C09", "C15"]
+        "C09": ["GT-0008"], "C15": ["GT-0015", "GT-0017"],
+        "C16": c16.REFS}
+TEXT_CHECKS = ["C01", "C02", "C03", "C08", "C09", "C15", "C16"]
 LEGAL_CHECKS = {"C08", "C09"}
 
 _BULLET = re.compile(r"^\s*(?:[-*•·–]|\d{1,2}[.)])\s+")
@@ -108,6 +110,11 @@ def check_line(text: str, kind: str, src: Sources, memory: RoleMemory, role_id: 
     v, detail = c15.evaluate_text(text)
     out.append(_f("C15", src.soften(v, REFS["C15"]), ("Flag for review (baseline): " if v == "UNVERIFIED" else "OK (baseline): ")
                   + detail, cite("C15")))
+    v, found, detail = c16.evaluate_text(text)
+    refs = c16.refs_for(found) if found else c16.REFS
+    out.append({"check": "C16", "verdict": v, "ledger_refs": refs, "kinds": found,
+                "message": ("Flag for review (baseline): " if v == "UNVERIFIED" else "OK (baseline): ") + detail
+                + src.cite(refs)})
     return [f for f in out if checks is None or f["check"] in checks]
 
 
@@ -146,6 +153,10 @@ def line_questions(link_id: str, text: str, kind: str, flags: dict[str, dict]) -
         qs.append(HumanQuestion(link_id, "What job-related reason, other than age or graduation year, supports this?",
                                 "Age and age proxies are high legal risk.",
                                 "Don't ask the applicant's age or graduation year."))
+    if "C16" in flags:
+        k = flags["C16"]["kinds"][0]
+        qs.append(HumanQuestion(link_id, c16.QUESTIONS[k], c16.WHY[k], "Don't ask whether the product works; ask for "
+                                "the evidence."))
     if "C15" in flags:
         qs.append(HumanQuestion(link_id, "What data from your own process shows this vendor claim holds for this role?",
                                 "A vendor's claim is context, not proof.", "Don't ask whether the vendor is trusted."))
