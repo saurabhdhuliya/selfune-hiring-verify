@@ -26,7 +26,7 @@ from selfune_hv.report import render_html
 from selfune_hv.text_mode import verify_text
 
 ROOT = resource_root()
-JOB_CHECKS = ["C01", "C02", "C03", "C08"]     # C01-C03 as asked; C08 so an age rule is never asked to justify itself
+JOB_CHECKS = ["C01", "C02", "C03", "C08", "C16"]     # C01-C03 as asked; C08 so an age rule is never asked to justify itself; C16 flags unvalidated product claims
 MAX_TEXT = 20000
 MAX_ZIP_BYTES = 5 * 1024 * 1024
 MAX_UNZIPPED_BYTES = 20 * 1024 * 1024
