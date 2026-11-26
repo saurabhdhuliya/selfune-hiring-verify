@@ -62,8 +62,11 @@ Every link gets its own verdict. The chain is only as strong as its weakest link
 | C15 vendor claim as proof | 3/3 | 0/2 | - | PASS |
 
 - **C09 corpus** (`data/c9_corpus/`, 496 texts): 248/248 caught, 0/248 false alarms.
-- **Unit tests:** `py -m pytest tests`: 300 tests. Core install: 299 passed, 1 skipped (MCP tests skipped without `.[mcp]`). With `.[mcp]` and gradio: 301 passed, 1 core-only test skipped.
+- **Unit tests:** `py -m pytest tests`: 331 tests (C16 and the 2026-11-25 fixes added 29). Core install: 299 passed, 1 skipped (MCP tests skipped without `.[mcp]`). With `.[mcp]` and gradio: 301 passed, 1 core-only test skipped.
 - `py scripts/validate.py`: 0 failures.
+
+## Unvalidated product claims (C16, text mode)
+Paste a hiring tool's product page or an AI screening summary and C16 flags claims that look like evidence but state none: a score with no stated outcome ("92% match"), "verified" with no stated check, "bias-free", behavioural readings from voice or video, predictions with no validation, and screening with no person in the loop. Each gets one question that asks for the evidence (cites GT-0006/0007, GT-0022, GT-0048). Text that states its validation, bias audit or human review is left alone. Rule baseline; tested in `tests/test_c16.py` on wording taken from real job posts and hiring-tool sites.
 
 ## Mother assumptions (v0.3)
 `src/selfune_hv/mother.py` builds a dependency graph from the decision chains (role need -> requirement -> evidence -> decision, plus job-level flags that feed the evidence of the decisions they affect). For each UNVERIFIED, CONTRADICTED or ESCALATE node (and a missing role need) it counts the decisions and links that rest on it, merges nodes that raise the same question, and returns the top 1-3: one question (under 25 words), decisions unblocked, ledger citation. No LLM. It is in `report.json` (`mother_assumptions`) and at the top of `report.html`, and in text mode. In a pasted job post there are no decisions, so the order is severity, then position.

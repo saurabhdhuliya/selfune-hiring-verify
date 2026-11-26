@@ -1,7 +1,7 @@
 """MCP server: lets Claude or any MCP agent call the Selfune Hiring Verification Loop. No LLM inside.
 
 Tools:
-  verify_text(text)   -> text-mode report (C01, C02, C03, C08, C09, C15) for a job post or AI hiring summary
+  verify_text(text)   -> text-mode report (C01, C02, C03, C08, C09, C15, C16) for a job post or AI hiring summary
   verify_folder(path) -> full-loop report for a data folder in the docs/schema.md format (read-only: writes nothing)
   ledger_row(id)      -> one ledger row with its status, caveats and any warnings
 

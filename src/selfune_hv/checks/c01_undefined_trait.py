@@ -22,7 +22,9 @@ BASELINE = True
 REFS = ["GT-0019", "GT-0021"]
 
 TRAIT_WORDS = ["strong", "excellent", "exceptional", "great", "good", "amazing", "rockstar", "ninja",
-               "team player", "culture fit", "attitude", "energy", "drive", "attention to detail", "proficient"]
+               "team player", "culture fit", "attitude", "energy", "drive", "attention to detail", "proficient",
+               "reputed", "reputable", "premier", "prestigious", "top-tier", "go-getter", "self-starter", "dynamic",
+               "passionate", "presentable", "pleasing personality"]
 _TRAIT = re.compile(r"\b(?:" + "|".join(re.escape(w) for w in TRAIT_WORDS) + r")\b", re.I)
 # A number, a threshold or a test makes the requirement checkable.
 _MEASURED = re.compile(r"\d|\b(?:test(?:ed|s)?|measured|score[ds]?|exercise|work sample|threshold|"

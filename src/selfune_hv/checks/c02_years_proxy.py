@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from .c08_age_proxy import age_terms
 from ._common import data_file, REPO_ROOT, Sources, finding, load_json
 
 CHECK_ID = "C02"
@@ -21,6 +22,8 @@ YEARS = re.compile(rf"\b{_NUM}(?:\s*(?:-|to)\s*{_NUM})?\s*\+?\s*(?:years?|yrs?)\
 
 
 def years_counts(text: str) -> list[str]:
+    if age_terms(text):            # "Age below 30 years" is an age rule (C08), not experience
+        return []
     return [m.group(0) for m in YEARS.finditer(text)]
 
 
